@@ -1,0 +1,3 @@
+discord.py
+oauthlib
+starlette>=0.13.6
