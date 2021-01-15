@@ -343,7 +343,7 @@ class OAuth2Session(aiohttp.ClientSession):
             request_kwargs["params"] = dict(urldecode(body))
         else:
             raise ValueError("The method kwarg must be POST or GET.")
-
+        # print(method, token_url, timeout, headers, auth, verify_ssl, proxies, request_kwargs['data'])
         async with self.request(
             method=method,
             url=token_url,
@@ -352,7 +352,7 @@ class OAuth2Session(aiohttp.ClientSession):
             auth=auth,
             verify_ssl=verify_ssl,
             proxy=proxies,
-            **request_kwargs
+            data=request_kwargs['data']
         ) as resp:
             log.debug("Request to fetch token completed with status %s.", resp.status)
             log.debug("Request headers were %s", headers)
@@ -361,7 +361,7 @@ class OAuth2Session(aiohttp.ClientSession):
 
             log.debug("Response headers were %s and content %s.", resp.headers, text)
             (resp,) = self._invoke_hooks("access_token_response", resp)
-
+        # print(text, self.scope)
         self._client.parse_request_body_response(text, scope=self.scope)
         self.token = self._client.token
         log.debug("Obtained token %s.", self.token)

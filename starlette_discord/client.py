@@ -22,7 +22,7 @@ class DiscordOauthClient:
                                            f'?client_id={self.client_id}'
                                            f'&redirect_uri={self.redirect_uri}'
                                            f'&response_type=code'
-                                           f'&scope=identify')
+                                           f'&scope={self.scope}')
 
     def _session(self):
         return OAuth2Session(
@@ -49,7 +49,8 @@ class DiscordOauthClient:
     async def login(self, code):
         async with self._session() as session:
             url = BASE_URL + '/api/v8/oauth2/token'
-            token = await session.fetch_token(url, code=code)
+            # print(code.__class__)
+            token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
             print("TOKEN", token)
             user = await self._identify(session, token)
             return user
