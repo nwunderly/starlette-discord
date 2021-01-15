@@ -44,13 +44,14 @@ class DiscordOauthClient:
             'Authorization': 'Authorization: Bearer ' + token
         }
         async with session.get(url, headers=headers) as resp:
-            return resp.json()
+            return await resp.json()
 
     async def login(self, code):
+        # print('login')
         async with self._session() as session:
             url = BASE_URL + '/api/v8/oauth2/token'
             # print(code.__class__)
             token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
-            print("TOKEN", token)
+            # print("TOKEN", token)
             user = await self._identify(session, token)
             return user

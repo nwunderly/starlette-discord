@@ -242,6 +242,7 @@ class OAuth2Session(aiohttp.ClientSession):
         :param kwargs: Extra parameters to include in the token request.
         :return: A token dict
         """
+        # print('fetch_token')
         if not is_secure_transport(token_url):
             raise InsecureTransportError()
 
