@@ -1,12 +1,10 @@
-import aiohttp
-import oauthlib
-
+import discord
 from starlette.responses import RedirectResponse
 
 from .oauth2session import OAuth2Session
 
 
-BASE_URL = 'https://discord.com'
+BASE_URL = 'https://discord.com/api/v8'
 
 
 class DiscordOauthClient:
@@ -27,19 +25,13 @@ class DiscordOauthClient:
     def _session(self):
         return OAuth2Session(
             client_id=self.client_id,
-            # client=None,
-            # auto_refresh_url=None,
-            # auto_refresh_kwargs=None,
             scope=self.scope,
             redirect_uri=self.redirect_uri,
-            # token=None,
-            # state=None,
-            # token_updater=None,
         )
 
     async def _identify(self, session, auth):
         token = auth['access_token']
-        url = BASE_URL + '/api/v6/users/@me'
+        url = BASE_URL + '/users/@me'
         headers = {
             'Authorization': 'Authorization: Bearer ' + token
         }
@@ -47,11 +39,21 @@ class DiscordOauthClient:
             return await resp.json()
 
     async def login(self, code):
-        # print('login')
+        """Identify the user who has granted an authorization token.
+
+        Parameters
+        ----------
+        code:
+            Authorization code included with user request after redirect from Discord.
+
+        Returns
+        -------
+        :class:`discord.User`
+            The user who authorized the application.
+        """
         async with self._session() as session:
-            url = BASE_URL + '/api/v8/oauth2/token'
-            # print(code.__class__)
+            url = BASE_URL + '/oauth2/token'
             token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
-            # print("TOKEN", token)
             user = await self._identify(session, token)
-            return user
+
+        return discord.User(state=None, data=user)

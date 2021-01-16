@@ -1,19 +1,20 @@
 import uvicorn
-from fastapi import FastAPI
+from starlette.applications import Starlette
 
 from starlette_discord.client import DiscordOauthClient
+from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
-app = FastAPI()
-client = DiscordOauthClient('', '', '')
+app = Starlette()
+client = DiscordOauthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
-@app.get('/login')
+@app.route('/login')
 async def login_with_discord():
     return client.redirect()
 
 
-@app.get('/callback')
+@app.route('/callback')
 async def callback(code: str):
     return await client.login(code)
 
