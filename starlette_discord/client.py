@@ -1,14 +1,24 @@
 import discord
 from starlette.responses import RedirectResponse
 
-from .oauth2session import OAuth2Session
+from .session import OAuth2Session
 
 
 BASE_URL = 'https://discord.com/api/v8'
 
 
-class DiscordOauthClient:
-    """Client for Discord Oauth2."""
+class DiscordOAuthClient:
+    """Client for Discord Oauth2.
+
+    Parameters
+    ----------
+    client_id:
+        Discord application client ID.
+    client_secret:
+        Discord application client secret.
+    redirect_uri:
+        Discord application redirect URI.
+    """
     def __init__(self, client_id, client_secret, redirect_uri, scope='identify'):
         self.client_id = client_id
         self.client_secret = client_secret

@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 
-from starlette_discord.client import DiscordOauthClient
+from starlette_discord.client import DiscordOAuthClient
 from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
 app = FastAPI()
-client = DiscordOauthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
 @app.get('/login')

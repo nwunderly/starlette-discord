@@ -1,12 +1,12 @@
 import uvicorn
 from starlette.applications import Starlette
 
-from starlette_discord.client import DiscordOauthClient
+from starlette_discord.client import DiscordOAuthClient
 from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
 app = Starlette()
-client = DiscordOauthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
 @app.route('/login')
