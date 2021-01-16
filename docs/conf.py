@@ -73,4 +73,4 @@ html_static_path = ['_static']
 #   'aio': ('https://docs.aiohttp.org/en/stable/', None),
 # }
 
-autodoc_mock_imports = ['aiohttp', 'discord']
+autodoc_mock_imports = ['aiohttp', 'discord', 'starlette', 'oauthlib']
