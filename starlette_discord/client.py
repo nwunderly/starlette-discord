@@ -4,7 +4,8 @@ from starlette.responses import RedirectResponse
 from .session import OAuth2Session
 
 
-BASE_URL = 'https://discord.com/api/v8'
+DISCORD_URL = 'https://discord.com'
+API_URL = DISCORD_URL + '/api/v8'
 
 
 class DiscordOAuthClient:
@@ -26,11 +27,11 @@ class DiscordOAuthClient:
         self.scope = scope
 
     def redirect(self):
-        return RedirectResponse(BASE_URL + f'/api/oauth2/authorize'
-                                           f'?client_id={self.client_id}'
-                                           f'&redirect_uri={self.redirect_uri}'
-                                           f'&response_type=code'
-                                           f'&scope={self.scope}')
+        return RedirectResponse(DISCORD_URL + f'/api/oauth2/authorize'
+                                              f'?client_id={self.client_id}'
+                                              f'&redirect_uri={self.redirect_uri}'
+                                              f'&response_type=code'
+                                              f'&scope={self.scope}')
 
     def _session(self):
         return OAuth2Session(
@@ -41,7 +42,7 @@ class DiscordOAuthClient:
 
     async def _identify(self, session, auth):
         token = auth['access_token']
-        url = BASE_URL + '/users/@me'
+        url = API_URL + '/users/@me'
         headers = {
             'Authorization': 'Authorization: Bearer ' + token
         }
@@ -62,7 +63,7 @@ class DiscordOAuthClient:
             The user who authorized the application.
         """
         async with self._session() as session:
-            url = BASE_URL + '/oauth2/token'
+            url = API_URL + '/oauth2/token'
             token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
             user = await self._identify(session, token)
 

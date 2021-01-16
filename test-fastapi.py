@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from starlette.responses import PlainTextResponse
 
 from starlette_discord.client import DiscordOAuthClient
 from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
@@ -16,8 +17,8 @@ async def login_with_discord():
 
 @app.get('/callback')
 async def callback(code: str):
-    return await client.login(code)
+    user = await client.login(code)
+    return PlainTextResponse(str(user))
 
 
-
-uvicorn.run(app, host='localhost', port=9000)
+uvicorn.run(app, host='0.0.0.0', port=9000)
