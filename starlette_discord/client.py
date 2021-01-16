@@ -1,4 +1,5 @@
 import discord
+from .user import StarletteDiscordUser
 from starlette.responses import RedirectResponse
 
 from .session import OAuth2Session
@@ -49,6 +50,19 @@ class DiscordOAuthClient:
         async with session.get(url, headers=headers) as resp:
             return await resp.json()
 
+    async def get_guilds(self, session, auth):
+        token = auth['access_token']
+        url = API_URL + '/users/@me/guilds'
+        headers = {
+            'Authorization': 'Authorization: Bear ' + token
+        }
+        guilds = []
+        async with session.get(url, headers=headers) as resp:
+            for guild_data in (await resp.json()):
+                guild = discord.Guild(state=None, data=guild_data)
+                guilds.append(guild)
+        return guilds
+
     async def login(self, code):
         """Identify the user who has granted an authorization token.
 
@@ -66,5 +80,7 @@ class DiscordOAuthClient:
             url = API_URL + '/oauth2/token'
             token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
             user = await self._identify(session, token)
+            user = StarletteDiscordUser(state=None, data=user)
+            user.guilds = await self.get_guilds(session, token)
 
-        return discord.User(state=None, data=user)
+        return user
