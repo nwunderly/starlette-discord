@@ -1,7 +1,6 @@
 import discord
 from .user import StarletteDiscordUser
 from starlette.responses import RedirectResponse
-
 from .session import OAuth2Session
 
 
@@ -21,11 +20,12 @@ class DiscordOAuthClient:
     redirect_uri:
         Discord application redirect URI.
     """
-    def __init__(self, client_id, client_secret, redirect_uri, scope='identify'):
+    def __init__(self, client_id, client_secret, redirect_uri, scopes=('identify',)):
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
-        self.scope = scope
+        self.scopes = ' '.join(scope for scope in scopes)
+        print(self.scopes)
 
     def redirect(self):
         """Returns a RedirectResponse that directs to Discord login."""
@@ -33,12 +33,12 @@ class DiscordOAuthClient:
                                               f'?client_id={self.client_id}'
                                               f'&redirect_uri={self.redirect_uri}'
                                               f'&response_type=code'
-                                              f'&scope={self.scope}')
+                                              f'&scope={self.scopes}')
 
     def _session(self):
         return OAuth2Session(
             client_id=self.client_id,
-            scope=self.scope,
+            scope=self.scopes,
             redirect_uri=self.redirect_uri,
         )
 

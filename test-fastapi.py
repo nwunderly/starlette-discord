@@ -7,7 +7,7 @@ from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
 app = FastAPI()
-client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, scopes=('identify', 'guilds'))
 
 
 @app.get('/login')
@@ -17,9 +17,7 @@ async def login_with_discord():
 
 @app.get('/callback')
 async def callback(code: str):
-    user = await client.login(code)
-    for guild in user.guilds:
-        print(guild)
-    return user.name
+    u = await client.login(code)
+    return u
 
 uvicorn.run(app, host='0.0.0.0', port=5000)
