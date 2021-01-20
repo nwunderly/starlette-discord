@@ -17,7 +17,8 @@ async def login_with_discord():
 
 @app.get('/callback')
 async def callback(code: str):
-    u = await client.login(code)
+    async with client.session(code) as session:
+        u = await session.identify()
     return u
 
-uvicorn.run(app, host='0.0.0.0', port=5000)
+uvicorn.run(app, host='0.0.0.0', port=9000)

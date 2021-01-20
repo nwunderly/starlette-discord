@@ -1,11 +1,70 @@
-import discord
-from .user import StarletteDiscordUser
 from starlette.responses import RedirectResponse
-from .session import OAuth2Session
+from .oauth import OAuth2Session
 
 
 DISCORD_URL = 'https://discord.com'
 API_URL = DISCORD_URL + '/api/v8'
+
+
+class DiscordOAuthSession(OAuth2Session):
+    """Session containing data for a single authorized user. Handles authorization internally.
+
+    Parameters
+    ----------
+    code:
+        Authorization code included with user request after redirect from Discord.
+    """
+    def __init__(self, code, client_id, client_secret, scope, redirect_uri):
+        self._discord_auth_code = code
+        self._discord_client_secret = client_secret
+        self._discord_token = None
+        super().__init__(
+            client_id=client_id,
+            scope=scope,
+            redirect_uri=redirect_uri,
+        )
+
+    async def __aenter__(self):
+        await super().__aenter__()
+
+        url = API_URL + '/oauth2/token'
+
+        self._discord_token = await self.fetch_token(
+            url,
+            code=self._discord_auth_code,
+            client_secret=self._discord_client_secret
+        )
+
+        return self
+
+    async def _discord_request(self, url_fragment, auth):
+        token = auth['access_token']
+        url = API_URL + url_fragment
+        headers = {
+            'Authorization': 'Authorization: Bearer ' + token
+        }
+        async with self.get(url, headers=headers) as resp:
+            return await resp.json()
+
+    async def identify(self):
+        """Authorize and identify a user.
+
+        Returns
+        -------
+        :class:`dict`
+            The user who authorized the application.
+        """
+        return await self._discord_request('/users/@me', self._discord_token)
+
+    async def guilds(self):
+        """Authorize a user and fetch their guild list.
+
+        Returns
+        -------
+        :class:`list`
+            The user's guild list.
+        """
+        return await self._discord_request('/users/@me/guilds', self._discord_token)
 
 
 class DiscordOAuthClient:
@@ -25,7 +84,6 @@ class DiscordOAuthClient:
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.scopes = ' '.join(scope for scope in scopes)
-        print(self.scopes)
 
     def redirect(self):
         """Returns a RedirectResponse that directs to Discord login."""
@@ -35,66 +93,17 @@ class DiscordOAuthClient:
                                               f'&response_type=code'
                                               f'&scope={self.scopes}')
 
-    def _session(self):
-        return OAuth2Session(
+    def session(self, code) -> DiscordOAuthSession:
+        return DiscordOAuthSession(
+            code=code,
             client_id=self.client_id,
+            client_secret=self.client_secret,
             scope=self.scopes,
             redirect_uri=self.redirect_uri,
         )
 
-    async def _request(self, url_fragment, session, auth):
-        token = auth['access_token']
-        url = API_URL + url_fragment
-        headers = {
-            'Authorization': 'Authorization: Bearer ' + token
-        }
-        async with session.get(url, headers=headers) as resp:
-            return await resp.json()
-
-    async def fetch_token(self, session, code):
-        """Fetch a token from a user authorization code."""
-        url = API_URL + '/oauth2/token'
-        token = await session.fetch_token(url, code=code, client_secret=self.client_secret)
-        return token
-
-    async def identify(self, code):
-        """Authorize and identify a user.
-
-        Parameters
-        ----------
-        code:
-            Authorization code included with user request after redirect from Discord.
-
-        Returns
-        -------
-        :class:`dict`
-            The user who authorized the application.
-        """
-        async with self._session() as session:
-            token = await self.fetch_token(session, code)
-            user = await self._request('/users/@me', session, token)
-
-        return user
-
     async def login(self, code):
-        """Alias for ``identify``."""
-        return await self.identify(code)
-
-    async def guilds(self, code):
-        """Authorize a user and fetch their guild list.
-
-        Parameters
-        ----------
-        code:
-            Authorization code included with user request after redirect from Discord.
-
-        Returns
-        -------
-        :class:`list`
-            The user's guild list.
-        """
-        async with self._session() as session:
-            token = await self.fetch_token(session, code)
-            guilds = await self._request('/users/@me/guilds', session, token)
-
-        return guilds
+        """Shorthand for session setup + identify()"""
+        async with self.session(code) as session:
+            user = await session.identify()
+        return user
