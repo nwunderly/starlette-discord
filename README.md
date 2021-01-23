@@ -10,12 +10,19 @@ starlette-discord can be installed with the command
 
 ```sh
 # Linux
-python3 -m pip install -U git+https://github.com/nwunderly/starlette-discord
+python3 -m pip install -U starlette-discord
 
 # Windows
-python -m pip install -U git+https://github.com/nwunderly/starlette-discord
+python -m pip install -U starlette-discord
 ```
 
+To install the development version of the library directly from source:
+
+```sh
+$ git clone https://github.com/nwunderly/starlette-discord
+$ cd starlette-discord
+$ python3 -m pip install -U .
+```
 
 ### Quickstart
 
@@ -40,8 +47,8 @@ async def start_login():
 @app.get('/callback')
 async def finish_login(code: str):
     user = await discord_client.login(code)
-    print(user) # discord.py User object
-    return str(user)
+    print(user)
+    return user
 
 uvicorn.run(app)
 ```

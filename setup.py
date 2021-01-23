@@ -17,7 +17,7 @@ setuptools.setup(
     author='nwunderly',
     url='https://github.com/nwunderly/starlette-discord',
     project_urls={
-        "Documentation": "https://starlette-discord.rtfd.org/",
+        "Documentation": "https://starlette-discord.rtfd.io/",
     },
     version=version,
     description='"Login with Discord" support for Starlette and FastAPI.',

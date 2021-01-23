@@ -8,7 +8,7 @@ from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
 app = Starlette()
-client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, scopes=('identify', 'guilds'))
+client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, scopes=('identify', 'guilds', 'email', 'connections'))
 
 
 @app.route('/login')
@@ -21,7 +21,9 @@ async def callback(request: Request):
     code = request.query_params['code']
     async with client.session(code) as session:
         u = await session.identify()
-    return JSONResponse(u)
+        g = await session.guilds()
+        c = await session.connections()
+    return JSONResponse({'user': u, 'guilds': g, 'connections': c})
 
 
 
