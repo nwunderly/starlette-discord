@@ -1,4 +1,5 @@
 import setuptools
+import re
 
 
 with open('./README.md', 'r') as fp:
@@ -6,10 +7,7 @@ with open('./README.md', 'r') as fp:
 
 
 with open('./starlette_discord/__init__.py', 'r') as fp:
-    # FIRST LINE:
-    # __version__ = '<version>'
-    line = fp.readline()
-    version = eval(line[14:])
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)
 
 
 setuptools.setup(

@@ -13,6 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import re
 
 
 # -- Project information -----------------------------------------------------
@@ -23,11 +24,8 @@ author = 'nwunderly'
 
 master_doc = 'index'
 
-with open('../starlette_discord/__init__.py', 'r') as f:
-    # FIRST LINE:
-    # __version__ = '<version>'
-    line = f.readline()
-    version = eval(line[14:])
+with open('../starlette_discord/__init__.py', 'r') as fp:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)
 
 
 # The full version, including alpha/beta/rc tags
