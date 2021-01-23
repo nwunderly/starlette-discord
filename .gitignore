@@ -128,3 +128,4 @@ dmypy.json
 .idea/
 #test-*.py
 auth.py
+.pypirc
