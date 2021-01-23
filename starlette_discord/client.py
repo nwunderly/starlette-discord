@@ -152,6 +152,18 @@ class DiscordOAuthClient:
         )
 
     def session(self, code) -> DiscordOAuthSession:
+        """Create a new DiscordOAuthSession with this client's information.
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the Discord API.
+
+        Returns
+        -------
+        :class:`DiscordOAuthSession`
+            A new OAuth session.
+        """
         return DiscordOAuthSession(
             code=code,
             client_id=self.client_id,
