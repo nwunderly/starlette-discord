@@ -23,6 +23,9 @@ class DiscordOAuthSession(OAuth2Session):
             scope=scope,
             redirect_uri=redirect_uri,
         )
+        self._cached_user = None
+        self._cached_guilds = None
+        self._cached_connections = None
 
     async def __aenter__(self):
         await super().__aenter__()
@@ -37,34 +40,87 @@ class DiscordOAuthSession(OAuth2Session):
 
         return self
 
-    async def _discord_request(self, url_fragment, auth):
+    async def _discord_request(self, url_fragment, method='GET'):
+        auth = self._discord_token
         token = auth['access_token']
         url = API_URL + url_fragment
         headers = {
             'Authorization': 'Authorization: Bearer ' + token
         }
-        async with self.get(url, headers=headers) as resp:
+        async with self.request(method, url, headers=headers) as resp:
             return await resp.json()
 
     async def identify(self):
-        """Authorize and identify a user.
+        """Identify a user.
 
         Returns
         -------
         :class:`dict`
             The user who authorized the application.
         """
-        return await self._discord_request('/users/@me', self._discord_token)
+        if self._cached_user:
+            return self._cached_user
+        user = await self._discord_request('/users/@me')
+        self._cached_user = user
+        return user
 
     async def guilds(self):
-        """Authorize a user and fetch their guild list.
+        """Fetch a user's guild list.
 
         Returns
         -------
         :class:`list`
             The user's guild list.
         """
-        return await self._discord_request('/users/@me/guilds', self._discord_token)
+        if self._cached_guilds:
+            return self._cached_guilds
+        guilds = await self._discord_request('/users/@me/guilds')
+        self._cached_guilds = guilds
+        return guilds
+
+    async def connections(self):
+        """Fetch a user's linked 3rd-party accounts.
+
+        Returns
+        -------
+        :class:`list`
+            The user's connections.
+        """
+        if self._cached_connections:
+            return self._cached_connections
+        connections = await self._discord_request('/users/@me/connections')
+        self._cached_connections = connections
+        return connections
+
+    async def join_guild(self, guild_id, user_id=None):
+        """Add a user to a guild.
+
+        Parameters
+        ----------
+        guild_id: :class:`int`
+            The ID of the guild to add the user to.
+        user_id: :class:`Optional[int]`
+            ID of the user, if known. If not specified, will first identify the user.
+        """
+        if not user_id:
+            user = await self.identify()
+            user_id = user['id']
+        return await self._discord_request(f'/guilds/{guild_id}/members/{user_id}', method='PUT')
+
+    async def join_group_dm(self, dm_channel_id, user_id=None):
+        """Add a user to a group DM.
+
+        Parameters
+        ----------
+        dm_channel_id: :class:`int`
+            The ID of the DM channel to add the user to.
+        user_id: :class:`Optional[int]`
+            ID of the user, if known. If not specified, will first identify the user.
+        """
+        if not user_id:
+            user = await self.identify()
+            user_id = user['id']
+        return await self._discord_request(f'/channels/{dm_channel_id}/recipients/{user_id}', method='PUT')
 
 
 class DiscordOAuthClient:
@@ -87,11 +143,13 @@ class DiscordOAuthClient:
 
     def redirect(self):
         """Returns a RedirectResponse that directs to Discord login."""
-        return RedirectResponse(DISCORD_URL + f'/api/oauth2/authorize'
-                                              f'?client_id={self.client_id}'
-                                              f'&redirect_uri={self.redirect_uri}'
-                                              f'&response_type=code'
-                                              f'&scope={self.scopes}')
+        client_id = f'client_id={self.client_id}'
+        redirect_uri = f'redirect_uri={self.redirect_uri}'
+        scopes = f'scope={self.scopes}'
+        response_type = 'response_type=code'
+        return RedirectResponse(
+            DISCORD_URL + f'/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}'
+        )
 
     def session(self, code) -> DiscordOAuthSession:
         return DiscordOAuthSession(
