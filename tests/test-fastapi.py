@@ -1,6 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import PlainTextResponse
 
 from starlette_discord.client import DiscordOAuthClient
 from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
