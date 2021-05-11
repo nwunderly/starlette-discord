@@ -7,9 +7,10 @@ will return the same data without requiring re-authorization.
 
 import secrets
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
+from starlette.exceptions import HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_discord.client import DiscordOAuthClient
 

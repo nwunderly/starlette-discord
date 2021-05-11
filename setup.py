@@ -10,6 +10,10 @@ with open('./starlette_discord/__init__.py', 'r') as fp:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)
 
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+
 setuptools.setup(
     name='starlette-discord',
     author='nwunderly',
@@ -21,14 +25,15 @@ setuptools.setup(
     description='"Login with Discord" support for Starlette and FastAPI.',
     long_description=long_description,
     long_description_content_type='text/markdown',
+    install_requires=requirements,
     extras_require={
         'docs': [
             'sphinx',
             'sphinxcontrib_trio',
         ],
     },
-    packages=setuptools.find_packages(),
     python_requires='>=3.8',
+    packages=setuptools.find_packages(),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
@@ -42,3 +47,4 @@ setuptools.setup(
         'Topic :: Utilities',
     ],
 )
+

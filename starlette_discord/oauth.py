@@ -1,7 +1,8 @@
 ########################################################################################################
 # This file was originally found at: https://gist.github.com/kellerza/5ca798f49983bb702bc6e7a05ba53def #
+# Thanks, kellerza! <3                                                                                 #
 #                                                                                                      #
-# Thanks, kellerza                                                                                     #
+# - nwunder                                                                                            #
 ########################################################################################################
 
 """OAuth2Support for aiohttp.ClientSession.

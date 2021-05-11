@@ -11,8 +11,14 @@ class DiscordOAuthSession(OAuth2Session):
 
     Parameters
     ----------
-    code:
+    code: :class:`str`
         Authorization code included with user request after redirect from Discord.
+    client_id: :class:`int`
+        Your Discord application client ID.
+    scope: :class:`str`
+        Discord authorization scopes separated by %20.
+    redirect_uri: :class:`str`
+        Your Discord application redirect URI.
     """
     def __init__(self, code, client_id, client_secret, scope, redirect_uri):
         self._discord_auth_code = code
@@ -134,22 +140,39 @@ class DiscordOAuthClient:
         Discord application client secret.
     redirect_uri:
         Discord application redirect URI.
+    scopes: :class:`tuple[str]`
+        Discord authorization scopes.
     """
     def __init__(self, client_id, client_secret, redirect_uri, scopes=('identify',)):
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
-        self.scopes = ' '.join(scope for scope in scopes)
+        self.scope = ' '.join(scope for scope in scopes)
 
-    def redirect(self):
-        """Returns a RedirectResponse that directs to Discord login."""
+    def redirect(self, state=None, prompt=None):
+        """Returns a RedirectResponse that directs to Discord login.
+
+        Parameters
+        ----------
+        state: :class:`Optional[str]`
+            Optional state parameter for Discord redirect URL.
+            Docs can be found `here <https://discord.com/developers/docs/topics/oauth2#state-and-security>`_.
+
+        prompt: :class:`Optional[str]`
+            Optional prompt parameter for Discord redirect URL.
+            If ``consent``, user is prompted to re-approve authorization. If ``none``, skips authorization if user has already authorized.
+            Defaults to ``consent``.
+        """
         client_id = f'client_id={self.client_id}'
         redirect_uri = f'redirect_uri={self.redirect_uri}'
-        scopes = f'scope={self.scopes}'
+        scopes = f'scope={self.scope}'
         response_type = 'response_type=code'
-        return RedirectResponse(
-            DISCORD_URL + f'/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}'
-        )
+        url = DISCORD_URL + f'/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}'
+        if state:
+            url += f'&state={state}'
+        if prompt:
+            url += f'&prompt={prompt}'
+        return RedirectResponse(url)
 
     def session(self, code) -> DiscordOAuthSession:
         """Create a new DiscordOAuthSession with this client's information.
@@ -168,7 +191,7 @@ class DiscordOAuthClient:
             code=code,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            scope=self.scopes,
+            scope=self.scope,
             redirect_uri=self.redirect_uri,
         )
 
