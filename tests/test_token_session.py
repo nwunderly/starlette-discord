@@ -28,9 +28,11 @@ async def callback(code: str):
 
 @app.get('/guilds')
 async def get_guilds():
-    async with client.session(token=TOKEN) as session:  # TOKEN is {'access_token': '...'} obtained in previous login
+    async with client.session_from_token(token=TOKEN) as session:
+        # TOKEN is the 'access_token' string or the whole dict obtained in previous login
         guilds = await session.guilds()
     return {'guilds': guilds}
 
 
-uvicorn.run(app, host='0.0.0.0', port=9000)
+# uvicorn.run(app, host='0.0.0.0', port=9000)
+uvicorn.run(app)
