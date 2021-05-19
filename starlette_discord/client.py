@@ -1,6 +1,8 @@
-from starlette.responses import RedirectResponse
-from .oauth import OAuth2Session
+from typing import Dict, Union
 
+from starlette.responses import RedirectResponse
+
+from .oauth import OAuth2Session
 
 DISCORD_URL = 'https://discord.com'
 API_URL = DISCORD_URL + '/api/v8'
@@ -13,6 +15,8 @@ class DiscordOAuthSession(OAuth2Session):
     ----------
     code: :class:`str`
         Authorization code included with user request after redirect from Discord.
+    token: :class:`Union[str, int, float]`
+        A previously generated, valid, access token to use instead of the OAuth code exchange
     client_id: :class:`int`
         Your Discord application client ID.
     scope: :class:`str`
@@ -20,35 +24,45 @@ class DiscordOAuthSession(OAuth2Session):
     redirect_uri: :class:`str`
         Your Discord application redirect URI.
     """
-    def __init__(self, code, client_id, client_secret, scope, redirect_uri):
+
+    def __init__(self, client_id, client_secret, scope, redirect_uri,
+                 code: str = None,  # obtained during login callback
+                 token: Dict[str, Union[str, int, float]] = None  # example {'access_token': 'sffd8fds90ds890fs'}
+                 ):
+
+        if not code and not token:
+            raise ValueError('Either code or token are required to construct the session')
+        elif code and token:
+            raise ValueError('Use either :param code: or :param token:, not both')
+        elif token:
+            if not token.get('access_token'):
+                raise ValueError(':param token: requires "access_token" key but is missing.')
+            elif not token.get('token_type'):  # this is not required for the discord class but for the parent class
+                token['token_type'] = 'Bearer'
+
         self._discord_auth_code = code
         self._discord_client_secret = client_secret
-        self._discord_token = None
+        self.discord_token = token
         super().__init__(
             client_id=client_id,
             scope=scope,
             redirect_uri=redirect_uri,
+            token=token
         )
         self._cached_user = None
         self._cached_guilds = None
         self._cached_connections = None
 
-    async def __aenter__(self):
-        await super().__aenter__()
-
-        url = API_URL + '/oauth2/token'
-
-        self._discord_token = await self.fetch_token(
-            url,
-            code=self._discord_auth_code,
-            client_secret=self._discord_client_secret
-        )
-
-        return self
-
     async def _discord_request(self, url_fragment, method='GET'):
-        auth = self._discord_token
-        token = auth['access_token']
+        if not self.discord_token:
+            url = API_URL + '/oauth2/token'
+            self.discord_token = await self.fetch_token(
+                url,
+                code=self._discord_auth_code,
+                client_secret=self._discord_client_secret
+            )
+
+        token = self.discord_token['access_token']
         url = API_URL + url_fragment
         headers = {
             'Authorization': 'Authorization: Bearer ' + token
@@ -143,6 +157,7 @@ class DiscordOAuthClient:
     scopes: :class:`tuple[str]`
         Discord authorization scopes.
     """
+
     def __init__(self, client_id, client_secret, redirect_uri, scopes=('identify',)):
         self.client_id = client_id
         self.client_secret = client_secret
@@ -174,14 +189,17 @@ class DiscordOAuthClient:
             url += f'&prompt={prompt}'
         return RedirectResponse(url)
 
-    def session(self, code) -> DiscordOAuthSession:
+    def session(self, code: str = None,
+                token: Dict[str, Union[str, int, float]] = None
+                ) -> DiscordOAuthSession:
         """Create a new DiscordOAuthSession with this client's information.
 
         Parameters
         ----------
         code: :class:`str`
             The OAuth2 code provided by the Discord API.
-
+        token: :class:`Dict[str, Union[str, int, float]]`
+            A previously generated, valid, access token to use instead of the OAuth code exchange
         Returns
         -------
         :class:`DiscordOAuthSession`
@@ -189,6 +207,7 @@ class DiscordOAuthClient:
         """
         return DiscordOAuthSession(
             code=code,
+            token=token,
             client_id=self.client_id,
             client_secret=self.client_secret,
             scope=self.scope,
