@@ -271,8 +271,25 @@ class DiscordOAuthClient:
             redirect_uri=self.redirect_uri,
         )
 
-    async def login(self, code):
-        """Shorthand for session setup + identify."""
+    async def login(self, code, *, return_token=False):
+        """
+        Shorthand for session setup + identify
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the Discord API.
+        return_token: :class:`bool`
+            If True the return type will be a touple containing the user and the access token.
+
+        Returns
+        -------
+        :class:`Union[dict, Tuple[dict, dict]]`
+            User information from discord if :param return_token: is ``False`` (Default)
+            User and Token if :param return_token: is ``True``
+        """
         async with self.session(code) as session:
             user = await session.identify()
-        return user
+            token = session.token
+        return user if not return_token else user, token
+
