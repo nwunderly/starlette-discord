@@ -29,7 +29,7 @@ async def callback(code: str):
 
 @app.get('/guilds')
 async def get_guilds():
-    async with client.session_from_token(TOKEN) as session:
+    async with client.token_session(TOKEN) as session:
         # TOKEN is the 'access_token' string or the whole dict obtained in previous login
         guilds = await session.guilds()
     return {'guilds': guilds}

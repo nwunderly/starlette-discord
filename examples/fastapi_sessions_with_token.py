@@ -47,7 +47,7 @@ async def callback(request: Request, code: str, state: str):
 async def get_guilds(request: Request):
     if (user := request.session.get('user')) and (user_id := int(user['id'])) in token_cache:
         token = token_cache[user_id]
-        async with client.session_from_token(token) as session:
+        async with client.token_session(token) as session:
             guilds = await session.guilds()
         return guilds
     else:

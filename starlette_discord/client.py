@@ -12,7 +12,7 @@ class DiscordOAuthSession(OAuth2Session):
 
     .. warning::
         It is recommended to not construct this class directly.
-        Use `DiscordOAuthSession.session` or `DiscordOAuthSession.session_from_token` instead.
+        Use `DiscordOAuthSession.session` or `DiscordOAuthSession.token_session` instead.
 
     .. note::
         Either the 'code' or 'token' parameter must be provided, but not both.
@@ -34,7 +34,7 @@ class DiscordOAuthSession(OAuth2Session):
     token: :class:`Optional[Dict[str, Union[str, int, float]]]`
         A previously generated, valid, access token to use instead of the OAuth code exchange
     """
-    def __init__(self, client_id, client_secret, scope, redirect_uri, *, code, token):
+    def __init__(self, client_id, client_secret, scope, redirect_uri, *, code=None, token=None):
         if (not (code or token)) or (code and token):
             raise ValueError("Either 'code' or 'token' parameter must be provided, but not both.")
         elif token:
@@ -127,8 +127,15 @@ class DiscordOAuthSession(OAuth2Session):
         self._cached_user = user
         return user
 
-    async def guilds(self):
+    async def guilds(self, filter_method=None):
         """Fetch a user's guild list.
+
+        Parameters
+        ----------
+            filter_method: :class:`Optional[Callable]`
+                An optional callable to be used on each guild.
+                It should take a single argument :guild: and return a :class:`bool` indicating if the guild should
+                be taken or discarded
 
         Returns
         -------
@@ -136,6 +143,8 @@ class DiscordOAuthSession(OAuth2Session):
             The user's guild list.
         """
         guilds = await self._discord_request('/users/@me/guilds')
+        if filter_method is not None:
+            guilds = [guild for guild in guilds if filter_method(guild)]
         self._cached_guilds = guilds
         return guilds
 
@@ -249,7 +258,7 @@ class DiscordOAuthClient:
             redirect_uri=self.redirect_uri,
         )
 
-    def session_from_token(self, token) -> DiscordOAuthSession:
+    def token_session(self, token) -> DiscordOAuthSession:
         """Create a new DiscordOAuthSession from an existing token.
 
         Parameters
@@ -263,7 +272,6 @@ class DiscordOAuthClient:
             A new OAuth session.
         """
         return DiscordOAuthSession(
-            code=None,
             token=token,
             client_id=self.client_id,
             client_secret=self.client_secret,
@@ -285,8 +293,8 @@ class DiscordOAuthClient:
         Returns
         -------
         :class:`Union[dict, Tuple[dict, dict]]`
-            User information from discord if :param return_token: is ``False`` (Default)
-            User and Token if :param return_token: is ``True``
+            User information from discord if :param return_token: is **False** (Default)
+            User and Token if :param return_token: is **True**
         """
         async with self.session(code) as session:
             user = await session.identify()

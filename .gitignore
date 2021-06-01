@@ -129,3 +129,4 @@ dmypy.json
 #test-*.py
 auth.py
 .pypirc
+/InitServer/
