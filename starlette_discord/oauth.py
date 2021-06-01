@@ -280,7 +280,7 @@ class OAuth2Session(aiohttp.ClientSession):
                 )
             if password is None:
                 raise ValueError(
-                    "The required paramter `username` was supplied, "
+                    "The required parameter `username` was supplied, "
                     "but `password` was not."
                 )
 
