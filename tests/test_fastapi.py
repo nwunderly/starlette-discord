@@ -20,6 +20,6 @@ async def callback(code: str):
         u = await session.identify()
         g = await session.guilds()
         c = await session.connections()
-    return {'user': u, 'guilds': g, 'connections': c}
+    return {'user': str(u), 'guilds': str(g), 'connections': str(c)}
 
 uvicorn.run(app, host='0.0.0.0', port=9000)

@@ -29,7 +29,7 @@ async def callback(request: Request, code: str, state: str):
     async with client.session(code) as session:
         u = await session.identify()
 
-    return {'user': u}
+    return {'user': u.json()}
 
 
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(64))

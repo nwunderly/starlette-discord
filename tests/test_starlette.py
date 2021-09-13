@@ -23,8 +23,7 @@ async def callback(request: Request):
         u = await session.identify()
         g = await session.guilds()
         c = await session.connections()
-    return JSONResponse({'user': u, 'guilds': g, 'connections': c})
-
+    return JSONResponse({'user': str(u), 'guilds': str(g), 'connections': str(c)})
 
 
 uvicorn.run(app, host='0.0.0.0', port=9000)

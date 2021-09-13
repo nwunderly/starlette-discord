@@ -1,6 +1,7 @@
 from starlette.responses import RedirectResponse
 from oauthlib.common import generate_token
 from .oauth import OAuth2Session
+from .models import User, Guild, Connection
 
 
 DISCORD_URL = 'https://discord.com'
@@ -19,9 +20,9 @@ class DiscordOAuthSession(OAuth2Session):
 
     Parameters
     ----------
-    code: :class:`str`
+    code: :class:`Optional[str]`
         Authorization code included with user request after redirect from Discord.
-    token: :class:`Union[str, int, float]`
+    token: :class:`Optional[Dict[str, Union[str, int, float]]]`
         A previously generated, valid, access token to use instead of the OAuth code exchange
     client_id: :class:`int`
         Your Discord application client ID.
@@ -78,8 +79,7 @@ class DiscordOAuthSession(OAuth2Session):
 
     @property
     def cached_guilds(self):
-        """:class:`List[dict]`: The session's cached guilds, if a `guilds()` request has previously been made.
-        """
+        """:class:`List[dict]`: The session's cached guilds, if a `guilds()` request has previously been made."""
         return self._cached_guilds
 
     @property
@@ -120,10 +120,11 @@ class DiscordOAuthSession(OAuth2Session):
 
         Returns
         -------
-        :class:`dict`
+        :class:`User`
             The user who authorized the application.
         """
-        user = await self._discord_request('/users/@me')
+        data_user = await self._discord_request('/users/@me')
+        user = User(data=data_user)
         self._cached_user = user
         return user
 
@@ -135,7 +136,8 @@ class DiscordOAuthSession(OAuth2Session):
         :class:`list`
             The user's guild list.
         """
-        guilds = await self._discord_request('/users/@me/guilds')
+        data_guilds = await self._discord_request('/users/@me/guilds')
+        guilds = [Guild(data=g) for g in data_guilds]
         self._cached_guilds = guilds
         return guilds
 
@@ -147,7 +149,8 @@ class DiscordOAuthSession(OAuth2Session):
         :class:`list`
             The user's connections.
         """
-        connections = await self._discord_request('/users/@me/connections')
+        data_connections = await self._discord_request('/users/@me/connections')
+        connections = [Connection(data=c) for c in data_connections]
         self._cached_connections = connections
         return connections
 
@@ -163,7 +166,7 @@ class DiscordOAuthSession(OAuth2Session):
         """
         if not user_id:
             user = await self.identify()
-            user_id = user['id']
+            user_id = user.id
         return await self._discord_request(f'/guilds/{guild_id}/members/{user_id}', method='PUT')
 
     async def join_group_dm(self, dm_channel_id, user_id=None):
@@ -178,7 +181,7 @@ class DiscordOAuthSession(OAuth2Session):
         """
         if not user_id:
             user = await self.identify()
-            user_id = user['id']
+            user_id = user.id
         return await self._discord_request(f'/channels/{dm_channel_id}/recipients/{user_id}', method='PUT')
 
 
