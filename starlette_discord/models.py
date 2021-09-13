@@ -88,6 +88,10 @@ class User(DiscordObject):
         """Converts this User to a discord.User object."""
         raise NotImplementedError
 
+    @classmethod
+    def from_cookie(cls, request):
+        return cls(data=request.session.get('discord-user'))
+
 
 class Guild(DiscordObject):
     """A partial guild model from Discord. Returned by ``session.guilds()``."""
