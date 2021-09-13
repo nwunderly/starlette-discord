@@ -133,7 +133,7 @@ class DiscordOAuthSession(OAuth2Session):
 
         Returns
         -------
-        :class:`list`
+        :class:`List[Guild]`
             The user's guild list.
         """
         data_guilds = await self._discord_request('/users/@me/guilds')
@@ -146,7 +146,7 @@ class DiscordOAuthSession(OAuth2Session):
 
         Returns
         -------
-        :class:`list`
+        :class:`List[Connection]`
             The user's connections.
         """
         data_connections = await self._discord_request('/users/@me/connections')
