@@ -1,15 +1,14 @@
 """
 A basic FastAPI app that demonstrates "login with Discord".
 
-It also saves the user's login session, so any subsequent visits to /dash
-will return the same data without requiring re-authorization.
+This example uses an additional state for added security. Read about the state option here:
+https://discord.com/developers/docs/topics/oauth2#state-and-security
 """
 
 import secrets
 import uvicorn
 from fastapi import FastAPI
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_discord.client import DiscordOAuthClient
@@ -25,25 +24,19 @@ client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
 @app.get('/login')
-async def login_with_discord():
-    return client.redirect()
+async def login_with_discord(request: Request):
+    state = secrets.token_urlsafe(32)
+    request.session['state'] = state
+    return client.redirect(state=state, prompt='none')
 
 
-# NOTE: REDIRECT_URI should be this path.
 @app.get('/callback')
-async def callback(request: Request, code: str):
-    user = await client.login(code)
-    request.session['discord_user'] = user
-    return RedirectResponse('/dash')
-
-
-@app.get('/dash')
-async def dash(request: Request):
-    # raise 401-Unauthorized if user isn't logged in
-    user = request.session.get('discord_user')
-    if not user:
+async def callback(request: Request, code: str, state: str):
+    # raise 401-Unauthorized if state doesn't match
+    if not state == request.session.get('state'):
         raise HTTPException(401)
 
+    user = await client.login(code)
     return user.json()
 
 

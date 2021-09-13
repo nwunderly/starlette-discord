@@ -1,4 +1,4 @@
-# starlette-discord
+# Starlette-Discord
  "Login with Discord" support for Starlette and FastAPI
 
 starlette-discord is a Discord OAuth2 module intended for use with Starlette and FastAPI.

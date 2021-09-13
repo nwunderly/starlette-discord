@@ -25,7 +25,7 @@ async def login_with_discord():
 @app.get('/callback')
 async def callback(code: str):
     user = await client.login(code)
-    return user
+    return user.json()
 
 
 uvicorn.run(app)
