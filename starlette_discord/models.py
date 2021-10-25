@@ -10,7 +10,7 @@ class DiscordObject:
         self.id = int(data['id'])
 
     @classmethod
-    def with_id(cls, id_: int):
+    def from_id(cls, id_: int):
         """Initializes a new DiscordObject with the given ID.
 
         .. note::

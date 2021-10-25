@@ -196,7 +196,7 @@ class DiscordOAuthClient:
         Discord application client secret.
     redirect_uri:
         Discord application redirect URI.
-    scopes: tuple[:class:`str`]
+    scopes: Tuple[:class:`str`]
         Discord authorization scopes.
     """
 
@@ -276,7 +276,39 @@ class DiscordOAuthClient:
         )
 
     async def login(self, code):
-        """Shorthand for session setup + identify."""
+        """Shorthand for session setup + identify.
+        
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the authorization request.
+        
+        Returns
+        -------
+        :class:`User`
+            The user who authorized the application.
+        """
         async with self.session(code) as session:
             user = await session.identify()
         return user
+
+    # TODO: decide if I want to keep this. not a fan of the method name.
+    async def login_return_token(self, code):
+        """Shorthand for session setup + identify. Returns user and token.
+        
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the authorization request.
+
+        Returns
+        -------
+        Tuple[user, token]
+        user: :class:`User`
+            The user who authorized the application.
+        token: Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class:`float`]]
+            The access token provided by the Discord API.
+        """
+        async with self.session(code) as session:
+            user = await session.identify()
+        return user, session.token
