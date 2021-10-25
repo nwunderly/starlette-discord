@@ -20,9 +20,9 @@ class DiscordOAuthSession(OAuth2Session):
 
     Parameters
     ----------
-    code: :class:`Optional[str]`
+    code: Optional[:class:`str`]
         Authorization code included with user request after redirect from Discord.
-    token: :class:`Optional[Dict[str, Union[str, int, float]]]`
+    token: Optional[Dict[:class:`str`, Union[:class:`str`, :class`int`, :class:`float`]]]
         A previously generated, valid, access token to use instead of the OAuth code exchange
     client_id: :class:`int`
         Your Discord application client ID.
@@ -30,9 +30,9 @@ class DiscordOAuthSession(OAuth2Session):
         Discord authorization scopes separated by %20.
     redirect_uri: :class:`str`
         Your Discord application redirect URI.
-    code: :class:`Optional[str]`
+    code: Optional[:class:`str`]
         Authorization code included with user request after redirect from Discord.
-    token: :class:`Optional[Dict[str, Union[str, int, float]]]`
+    token: Optional[Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class`float`]]]
         A previously generated, valid, access token to use instead of the OAuth code exchange
     """
     def __init__(self, client_id, client_secret, scope, redirect_uri, *, code, token):
@@ -62,7 +62,7 @@ class DiscordOAuthSession(OAuth2Session):
 
     @property
     def token(self):
-        """:class:`Dict[str, Union[str, int, float]]`: The session's current OAuth token, if one exists."""
+        """Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class:`float`]]: The session's current OAuth token, if one exists."""
         # this is pretty much just for documentation purposes.
         return super().token
 
@@ -79,12 +79,12 @@ class DiscordOAuthSession(OAuth2Session):
 
     @property
     def cached_guilds(self):
-        """:class:`List[dict]`: The session's cached guilds, if a `guilds()` request has previously been made."""
+        """List[:class:`dict`]: The session's cached guilds, if a `guilds()` request has previously been made."""
         return self._cached_guilds
 
     @property
     def cached_connections(self):
-        """:class:`List[dict]`: The session's cached account connections, if a `connections()` request has previously been made."""
+        """List[:class:`dict`]: The session's cached account connections, if a `connections()` request has previously been made."""
         return self._cached_connections
 
     def new_state(self):
@@ -133,7 +133,7 @@ class DiscordOAuthSession(OAuth2Session):
 
         Returns
         -------
-        :class:`List[Guild]`
+        List[:class:`Guild`]
             The user's guild list.
         """
         data_guilds = await self._discord_request('/users/@me/guilds')
@@ -146,7 +146,7 @@ class DiscordOAuthSession(OAuth2Session):
 
         Returns
         -------
-        :class:`List[Connection]`
+        List[:class:`Connection`]
             The user's connections.
         """
         data_connections = await self._discord_request('/users/@me/connections')
@@ -161,7 +161,7 @@ class DiscordOAuthSession(OAuth2Session):
         ----------
         guild_id: :class:`int`
             The ID of the guild to add the user to.
-        user_id: :class:`Optional[int]`
+        user_id: Optional[:class:`int`]
             ID of the user, if known. If not specified, will first identify the user.
         """
         if not user_id:
@@ -176,7 +176,7 @@ class DiscordOAuthSession(OAuth2Session):
         ----------
         dm_channel_id: :class:`int`
             The ID of the DM channel to add the user to.
-        user_id: :class:`Optional[int]`
+        user_id: Optional[:class:`int`]
             ID of the user, if known. If not specified, will first identify the user.
         """
         if not user_id:
@@ -196,7 +196,7 @@ class DiscordOAuthClient:
         Discord application client secret.
     redirect_uri:
         Discord application redirect URI.
-    scopes: :class:`tuple[str]`
+    scopes: tuple[:class:`str`]
         Discord authorization scopes.
     """
 
@@ -211,11 +211,11 @@ class DiscordOAuthClient:
 
         Parameters
         ----------
-        state: :class:`Optional[str]`
+        state: Optional[:class:`str`]
             Optional state parameter for Discord redirect URL.
             Docs can be found `here <https://discord.com/developers/docs/topics/oauth2#state-and-security>`_.
 
-        prompt: :class:`Optional[str]`
+        prompt: Optional[:class:`str`]
             Optional prompt parameter for Discord redirect URL.
             If ``consent``, user is prompted to re-approve authorization. If ``none``, skips authorization if user has already authorized.
             Defaults to ``consent``.
@@ -238,6 +238,7 @@ class DiscordOAuthClient:
         ----------
         code: :class:`str`
             The OAuth2 code provided by the Discord API.
+
         Returns
         -------
         :class:`DiscordOAuthSession`
@@ -257,7 +258,7 @@ class DiscordOAuthClient:
 
         Parameters
         ----------
-        token: :class:`Dict[str, Union[str, int, float]]`
+        token: Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class:`float`]]
             An existing (valid) access token to use instead of the OAuth code exchange.
 
         Returns
