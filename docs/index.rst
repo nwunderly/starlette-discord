@@ -10,6 +10,7 @@ Welcome to Starlette-Discord's documentation!
    :maxdepth: 2
 
    api
+   models
    oauth
 
 
