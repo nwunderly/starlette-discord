@@ -13,7 +13,7 @@ class DiscordOAuthSession(OAuth2Session):
 
     .. warning::
         It is recommended to not construct this class directly.
-        Use `DiscordOAuthSession.session` or `DiscordOAuthSession.session_from_token` instead.
+        Use `DiscordOAuthClient.session` or `DiscordOAuthClient.session_from_token` instead.
 
     .. note::
         Either the 'code' or 'token' parameter must be provided, but not both.
