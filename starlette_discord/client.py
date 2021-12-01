@@ -5,7 +5,7 @@ from .models import User, Guild, Connection
 
 
 DISCORD_URL = 'https://discord.com'
-API_URL = DISCORD_URL + '/api/v8'
+API_URL = DISCORD_URL + '/api/v9'
 
 
 class DiscordOAuthSession(OAuth2Session):
