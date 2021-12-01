@@ -9,6 +9,7 @@ Welcome to Starlette-Discord's documentation!
 .. toctree::
    :maxdepth: 2
 
+   getting_started
    api
    models
    oauth

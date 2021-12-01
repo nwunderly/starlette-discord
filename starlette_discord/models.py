@@ -3,7 +3,13 @@ import discord
 
 
 class DiscordObject:
-    """Represents a Discord object. This library's equivalent to discord.Object."""
+    """Represents a Discord object. This library's equivalent to discord.Object.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The Discord object's unique ID.
+    """
 
     def __init__(self, data):
         self._json_data = data
@@ -39,7 +45,40 @@ class DiscordObject:
 
 
 class User(DiscordObject):
-    """A user model from Discord. Returned by ``session.identify()``."""
+    """A `user`_ model from Discord. Returned by ``session.identify()``.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The user's unique ID.
+    username: :class:`str`
+        The user's username.
+    discriminator: :class:`str`
+        The user's discriminator.
+    avatar: :class:`str`
+        The user's avatar hash.
+    flags: :class:`int`
+        The `flags`_ on the user's account
+    public_flags: :class:`int`
+        The public `flags`_ on the user's account.
+    banner: :class:`str`
+        The user's banner hash.
+    banner_color: :class:`str`
+        The user's banner color.
+    accent_color: :class:`int`
+        The user's banner color: represented as the int form of the color's hex code.
+    locale: :class:`str`
+        The user's language locale.
+    mfa_enabled: :class:`bool`
+        Whether the user has multi-factor authentication enabled.
+    email: :class:`str`
+        The user's email address. Only provided if the ``email`` scope is authorized.
+    verified: :class:`str`
+        Whether the user's email address has been verified.
+
+    .. _user: https://discord.com/developers/docs/resources/user
+    .. _flags: https://discord.com/developers/docs/resources/user#user-object-user-flags
+    """
 
     __slots__ = (
         '_json_data',
@@ -106,7 +145,7 @@ class User(DiscordObject):
         This is just a shortcut for ``client.get_user(id)`` followed by ``client.fetch_user(id)``,
         returning ``None`` if not found.
 
-        .. warning::
+        .. note::
             A discord.py ``Client`` or ``Bot`` object must be passed into this function.
 
         Parameters
@@ -128,7 +167,27 @@ class User(DiscordObject):
 
 
 class Guild(DiscordObject):
-    """A partial guild model from Discord. Returned by ``session.guilds()``."""
+    """A partial `guild`_ model from Discord. Returned by ``session.guilds()``.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The guild's unique ID.
+    name: :class:`str`
+        The guild's name.
+    icon: :class:`str`
+        The guild's icon hash.
+    owner: :class:`bool`
+        Whether the authorized user is owner of this guild.
+    permissions: :class:`int`
+        The authorized user's `permissions`_ in this guild.
+    features: List[:class:`str`]
+        The guild's enabled `features`_.
+
+    .. _guild: https://discord.com/developers/docs/resources/guild
+    .. _features: https://discord.com/developers/docs/resources/guild#guild-object-guild-features
+    .. _permissions: https://discord.com/developers/docs/topics/permissions
+    """
 
     __slots__ = (
         '_json_data',
@@ -165,7 +224,7 @@ class Guild(DiscordObject):
         self.name = data['name']
         self.icon = data.get('icon', None)
         self.owner = data['owner']
-        self.permissions = data['permissions']
+        self.permissions = int(data['permissions'])
         self.features = data['features']
 
     async def to_dpy(self, client):
@@ -174,7 +233,7 @@ class Guild(DiscordObject):
         This is just a shortcut for ``client.get_guild(id)`` followed by ``client.fetch_guild(id)``,
         returning ``None`` if not found.
 
-        .. warning::
+        .. note::
             A discord.py ``Client`` or ``Bot`` object must be passed into this function.
 
         Parameters
@@ -196,7 +255,28 @@ class Guild(DiscordObject):
 
 
 class Connection:
-    """An account connection model from Discord."""
+    """An account `connection`_ model from Discord.
+
+    Attributes
+    ----------
+    type: :class:`str`
+        The connection type.
+    id: :class:`str`
+        The connected account's ID.
+    name: :class:`str`
+        The connected account's username.
+    visibility: :class:`int`
+        The connected account's `visibility`_.
+    friend_sync: :class:`bool`
+        Whether friend sync is enabled for this connected account.
+    show_activity: :class:`bool`
+        Whether activities related to this connection will be shown in presence updates.
+    verified: :class:`bool`
+        Whether this connected account is verified.
+
+    .. _connection: https://discord.com/developers/docs/resources/user#connection-object
+    .. _visibility: https://discord.com/developers/docs/resources/user#connection-object-visibility-types
+    """
     
     __slots__ = (
         '_json_data',
