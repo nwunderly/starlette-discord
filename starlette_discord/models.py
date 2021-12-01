@@ -76,6 +76,7 @@ class User(DiscordObject):
     verified: :class:`str`
         Whether the user's email address has been verified.
 
+
     .. _user: https://discord.com/developers/docs/resources/user
     .. _flags: https://discord.com/developers/docs/resources/user#user-object-user-flags
     """
@@ -184,6 +185,7 @@ class Guild(DiscordObject):
     features: List[:class:`str`]
         The guild's enabled `features`_.
 
+
     .. _guild: https://discord.com/developers/docs/resources/guild
     .. _features: https://discord.com/developers/docs/resources/guild#guild-object-guild-features
     .. _permissions: https://discord.com/developers/docs/topics/permissions
@@ -273,6 +275,7 @@ class Connection:
         Whether activities related to this connection will be shown in presence updates.
     verified: :class:`bool`
         Whether this connected account is verified.
+
 
     .. _connection: https://discord.com/developers/docs/resources/user#connection-object
     .. _visibility: https://discord.com/developers/docs/resources/user#connection-object-visibility-types
