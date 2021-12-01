@@ -12,6 +12,7 @@ Welcome to Starlette-Discord's documentation!
    api
    models
    oauth
+   changelog
 
 
 

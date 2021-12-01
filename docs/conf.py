@@ -43,6 +43,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinxcontrib_trio',
+    'myst_parser',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

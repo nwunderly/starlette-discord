@@ -30,6 +30,7 @@ setuptools.setup(
         'docs': [
             'sphinx',
             'sphinxcontrib_trio',
+            'myst_parser',
         ],
     },
     python_requires='>=3.8',
