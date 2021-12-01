@@ -14,6 +14,16 @@ DiscordObject
     :members:
 
 
+Converting to Discord.py Objects
+++++++++++++++++++++++++++++++++
+
+DiscordObject subclasses (User and Guild) can be converted to ``discord.X`` objects with the ``to_dpy`` method.
+While discord.py is not a dependency of this library, the client passed into this method should be a valid discord.py
+client. Specifically, it needs to implement the ``get_X`` and ``fetch_X`` methods.
+
+This method is, and should remain, compatible with both discord.py 1.X and 2.X.
+
+
 User
 ----
 

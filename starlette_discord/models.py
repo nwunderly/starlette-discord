@@ -3,7 +3,7 @@ import discord
 
 
 class DiscordObject:
-    DPY_CLASS = None
+    """Represents a Discord object. This library's equivalent to discord.Object."""
 
     def __init__(self, data):
         self._json_data = data
@@ -37,31 +37,9 @@ class DiscordObject:
         """Returns the original JSON data for this model."""
         return self._json_data
 
-    def to_dpy(self, client):
-        """Converts this DiscordObject to a discord.Object
-
-        Parameters
-        ----------
-        client: :class:`discord.Client`
-            The bot client to use to create the object.
-
-        Returns
-        -------
-        :class:`discord.Object`
-        """
-        if self.DPY_CLASS is None:
-            raise NotImplementedError(
-                "DPY_CLASS is not known for DiscordObject. "
-                "This method will only work for subclasses of this class."
-            )
-        state = client._connection
-        return self.DPY_CLASS(state, self._json_data)
-
 
 class User(DiscordObject):
     """A user model from Discord. Returned by ``session.identify()``."""
-
-    DPY_CLASS = discord.User
 
     __slots__ = (
         '_json_data',
@@ -122,8 +100,14 @@ class User(DiscordObject):
         self.email = data.get('email', None)
         self.verified = data.get('verified', None)
 
-    def to_dpy(self, client):
-        """Converts this User to a discord.User
+    async def to_dpy(self, client):
+        """Tries to convert this User to a ``discord.User``.
+
+        This is just a shortcut for ``client.get_user(id)`` followed by ``client.fetch_user(id)``,
+        returning ``None`` if not found.
+
+        .. warning::
+            A discord.py ``Client`` or ``Bot`` object must be passed into this function.
 
         Parameters
         ----------
@@ -134,13 +118,17 @@ class User(DiscordObject):
         -------
         :class:`discord.User`
         """
-        return super().to_dpy(client)
+        user = client.get_user(self.id)
+        if not user:
+            try:
+                user = await client.fetch_user(self.id)
+            except discord.HTTPException:
+                return None
+        return user
 
 
 class Guild(DiscordObject):
     """A partial guild model from Discord. Returned by ``session.guilds()``."""
-
-    DPY_CLASS = discord.Guild
 
     __slots__ = (
         '_json_data',
@@ -180,8 +168,14 @@ class Guild(DiscordObject):
         self.permissions = data['permissions']
         self.features = data['features']
 
-    def to_dpy(self, client):
-        """Converts this Guild to a discord.Guild
+    async def to_dpy(self, client):
+        """Tries to convert this Guild to a ``discord.Guild``.
+
+        This is just a shortcut for ``client.get_guild(id)`` followed by ``client.fetch_guild(id)``,
+        returning ``None`` if not found.
+
+        .. warning::
+            A discord.py ``Client`` or ``Bot`` object must be passed into this function.
 
         Parameters
         ----------
@@ -192,7 +186,13 @@ class Guild(DiscordObject):
         -------
         :class:`discord.Guild`
         """
-        return super().to_dpy(client)
+        guild = client.get_guild(self.id)
+        if not guild:
+            try:
+                guild = await client.fetch_guild(self.id)
+            except discord.HTTPException:
+                return None
+        return guild
 
 
 class Connection:

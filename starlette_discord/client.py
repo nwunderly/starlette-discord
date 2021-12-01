@@ -24,7 +24,7 @@ class DiscordOAuthSession(OAuth2Session):
         Authorization code included with user request after redirect from Discord.
     token: Optional[Dict[:class:`str`, Union[:class:`str`, :class`int`, :class:`float`]]]
         A previously generated, valid, access token to use instead of the OAuth code exchange
-    client_id: :class:`int`
+    client_id: :class:`str`
         Your Discord application client ID.
     scope: :class:`str`
         Discord authorization scopes separated by %20.
@@ -190,23 +190,23 @@ class DiscordOAuthClient:
 
     Parameters
     ----------
-    client_id:
+    client_id: Union[:class:`str`, :class:`int`]
         Discord application client ID.
-    client_secret:
+    client_secret: :class:`str`
         Discord application client secret.
-    redirect_uri:
+    redirect_uri: :class:`str`
         Discord application redirect URI.
     scopes: Tuple[:class:`str`]
         Discord authorization scopes.
     """
 
     def __init__(self, client_id, client_secret, redirect_uri, scopes=('identify',)):
-        self.client_id = client_id
+        self.client_id = str(client_id)
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.scope = ' '.join(scope for scope in scopes)
 
-    def redirect(self, state=None, prompt=None):
+    def redirect(self, state=None, prompt=None, redirect_uri=None):
         """Returns a RedirectResponse that directs to Discord login.
 
         Parameters
@@ -214,14 +214,15 @@ class DiscordOAuthClient:
         state: Optional[:class:`str`]
             Optional state parameter for Discord redirect URL.
             Docs can be found `here <https://discord.com/developers/docs/topics/oauth2#state-and-security>`_.
-
         prompt: Optional[:class:`str`]
             Optional prompt parameter for Discord redirect URL.
             If ``consent``, user is prompted to re-approve authorization. If ``none``, skips authorization if user has already authorized.
             Defaults to ``consent``.
+        redirect_uri: Optional[:class:`str`]
+            Optional redirect URI to pass to Discord. Defaults to the client's redirect URI.
         """
         client_id = f'client_id={self.client_id}'
-        redirect_uri = f'redirect_uri={self.redirect_uri}'
+        redirect_uri = f'redirect_uri={redirect_uri or self.redirect_uri}'
         scopes = f'scope={self.scope}'
         response_type = 'response_type=code'
         url = DISCORD_URL + f'/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}'
