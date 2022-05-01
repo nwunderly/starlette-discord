@@ -1,25 +1,30 @@
 import uvicorn
+from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from fastapi import FastAPI
 
 from starlette_discord.client import DiscordOAuthClient
-from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-
 
 app = FastAPI()
-client = DiscordOAuthClient(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, scopes=('identify', 'guilds', 'email', 'connections'))
+client = DiscordOAuthClient(
+    CLIENT_ID,
+    CLIENT_SECRET,
+    REDIRECT_URI,
+    scopes=("identify", "guilds", "email", "connections"),
+)
 
 
-@app.get('/login')
+@app.get("/login")
 async def login_with_discord():
     return client.redirect()
 
 
-@app.get('/callback')
+@app.get("/callback")
 async def callback(code: str):
     async with client.session(code) as session:
         u = await session.identify()
         g = await session.guilds()
         c = await session.connections()
-    return {'user': str(u), 'guilds': str(g), 'connections': str(c)}
+    return {"user": str(u), "guilds": str(g), "connections": str(c)}
 
-uvicorn.run(app, host='0.0.0.0', port=9000)
+
+uvicorn.run(app, host="0.0.0.0", port=9000)

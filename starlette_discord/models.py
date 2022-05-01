@@ -1,4 +1,5 @@
-from typing import Optional, List
+from typing import List, Optional
+
 import discord
 
 
@@ -13,7 +14,7 @@ class DiscordObject:
 
     def __init__(self, data):
         self._json_data = data
-        self.id = int(data['id'])
+        self.id = int(data["id"])
 
     @classmethod
     def from_id(cls, id_: int):
@@ -28,7 +29,7 @@ class DiscordObject:
         id_: :class:`int`
             The ID of the object to create.
         """
-        return cls({'id': str(id_)})
+        return cls({"id": str(id_)})
 
     def __eq__(self, other) -> bool:
         return other.id == self.id
@@ -82,20 +83,18 @@ class User(DiscordObject):
     """
 
     __slots__ = (
-        '_json_data',
-        'id',
-        'username',
-        'discriminator',
-        'avatar',
-        'flags',
-        'public_flags'
-        'banner',
-        'banner_color'
-        'accent_color',
-        'locale',
-        'mfa_enabled',
-        'email',
-        'verified',
+        "_json_data",
+        "id",
+        "username",
+        "discriminator",
+        "avatar",
+        "flags",
+        "public_flags" "banner",
+        "banner_color" "accent_color",
+        "locale",
+        "mfa_enabled",
+        "email",
+        "verified",
     )
 
     _json_data: dict
@@ -121,24 +120,24 @@ class User(DiscordObject):
         return f"<User id={self.id} username={self.username!r} discriminator={self.discriminator!r}>"
 
     def __str__(self) -> str:
-        return f'{self.username}#{self.discriminator}'
+        return f"{self.username}#{self.discriminator}"
 
     def _update(self, data) -> None:
         # these are defined in super().__init__
         # self._json_data = data
         # self.id = int(data['id'])
-        self.username = data['username']
-        self.discriminator = data['discriminator']
-        self.avatar = data['avatar']
-        self.flags = data['flags']
-        self.public_flags = data.get('public_flags', 0)
-        self.banner = data.get('banner', None)
-        self.banner_color = data.get('banner_color', None)
-        self.accent_color = data.get('accent_color', None)
-        self.locale = data.get('locale', None)
-        self.mfa_enabled = data.get('mfa_enabled', None)
-        self.email = data.get('email', None)
-        self.verified = data.get('verified', None)
+        self.username = data["username"]
+        self.discriminator = data["discriminator"]
+        self.avatar = data["avatar"]
+        self.flags = data["flags"]
+        self.public_flags = data.get("public_flags", 0)
+        self.banner = data.get("banner", None)
+        self.banner_color = data.get("banner_color", None)
+        self.accent_color = data.get("accent_color", None)
+        self.locale = data.get("locale", None)
+        self.mfa_enabled = data.get("mfa_enabled", None)
+        self.email = data.get("email", None)
+        self.verified = data.get("verified", None)
 
     async def to_dpy(self, client):
         """Tries to convert this User to a ``discord.User``.
@@ -193,13 +192,13 @@ class Guild(DiscordObject):
     """
 
     __slots__ = (
-        '_json_data',
-        'id',
-        'name',
-        'icon',
-        'owner',
-        'permissions',
-        'features',
+        "_json_data",
+        "id",
+        "name",
+        "icon",
+        "owner",
+        "permissions",
+        "features",
     )
 
     _json_data: dict
@@ -224,11 +223,11 @@ class Guild(DiscordObject):
         # these are defined in super().__init__
         # self._json_data = data
         # self.id = int(data['id'])
-        self.name = data['name']
-        self.icon = data.get('icon', None)
-        self.owner = data['owner']
-        self.permissions = int(data['permissions'])
-        self.features = data['features']
+        self.name = data["name"]
+        self.icon = data.get("icon", None)
+        self.owner = data["owner"]
+        self.permissions = int(data["permissions"])
+        self.features = data["features"]
 
     async def to_dpy(self, client):
         """Tries to convert this Guild to a ``discord.Guild``.
@@ -282,16 +281,16 @@ class Connection:
     .. _connection: https://discord.com/developers/docs/resources/user#connection-object
     .. _visibility: https://discord.com/developers/docs/resources/user#connection-object-visibility-types
     """
-    
+
     __slots__ = (
-        '_json_data',
-        'type',
-        'id',
-        'name',
-        'visibility',
-        'friend_sync',
-        'show_activity',
-        'verified',
+        "_json_data",
+        "type",
+        "id",
+        "name",
+        "visibility",
+        "friend_sync",
+        "show_activity",
+        "verified",
     )
 
     _json_data: dict
@@ -314,13 +313,13 @@ class Connection:
 
     def _update(self, data) -> None:
         self._json_data = data
-        self.type = data['type']
-        self.id = data['id']
-        self.name = data['name']
-        self.visibility = data['visibility']
-        self.friend_sync = data['friend_sync']
-        self.show_activity = data['show_activity']
-        self.verified = data['verified']
+        self.type = data["type"]
+        self.id = data["id"]
+        self.name = data["name"]
+        self.visibility = data["visibility"]
+        self.friend_sync = data["friend_sync"]
+        self.show_activity = data["show_activity"]
+        self.verified = data["verified"]
 
     def json(self):
         """Returns the original JSON data for this model."""

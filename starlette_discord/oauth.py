@@ -12,17 +12,22 @@ https://github.com/requests/requests-oauthlib/blob/master/requests_oauthlib/oaut
 # pylint: disable=line-too-long,bad-continuation
 import logging
 
-from oauthlib.common import generate_token, urldecode
-from oauthlib.oauth2 import WebApplicationClient, InsecureTransportError
-from oauthlib.oauth2 import LegacyApplicationClient
-from oauthlib.oauth2 import TokenExpiredError, is_secure_transport
 import aiohttp
+from oauthlib.common import generate_token, urldecode
+from oauthlib.oauth2 import (
+    InsecureTransportError,
+    LegacyApplicationClient,
+    TokenExpiredError,
+    WebApplicationClient,
+    is_secure_transport,
+)
 
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class TokenUpdated(Warning):
     """Exception."""
+
     def __init__(self, token):
         super(TokenUpdated, self).__init__()
         self.token = token
@@ -248,11 +253,12 @@ class OAuth2Session(aiohttp.ClientSession):
             raise InsecureTransportError()
 
         if not code and authorization_response:
-            log.debug('-- response %s', authorization_response)
+            log.debug("-- response %s", authorization_response)
             self._client.parse_request_uri_response(
-                str(authorization_response), state=self._state)
+                str(authorization_response), state=self._state
+            )
             code = self._client.code
-            log.debug('--code %s', code)
+            log.debug("--code %s", code)
         elif not code and isinstance(self._client, WebApplicationClient):
             code = self._client.code
             if not code:
@@ -354,7 +360,7 @@ class OAuth2Session(aiohttp.ClientSession):
             auth=auth,
             verify_ssl=verify_ssl,
             proxy=proxies,
-            data=request_kwargs['data']
+            data=request_kwargs["data"],
         ) as resp:
             log.debug("Request to fetch token completed with status %s.", resp.status)
             log.debug("Request headers were %s", headers)
@@ -414,7 +420,7 @@ class OAuth2Session(aiohttp.ClientSession):
         refresh_token = refresh_token or self.token.get("refresh_token")
 
         log.debug(
-           "Adding auto refresh key word arguments %s.", self.auto_refresh_kwargs
+            "Adding auto refresh key word arguments %s.", self.auto_refresh_kwargs
         )
 
         kwargs.update(self.auto_refresh_kwargs)
@@ -467,7 +473,9 @@ class OAuth2Session(aiohttp.ClientSession):
             raise InsecureTransportError()
         if self.token and not withhold_token:
 
-            url, headers, data = self._invoke_hooks("protected_request", url, headers, data)
+            url, headers, data = self._invoke_hooks(
+                "protected_request", url, headers, data
+            )
             log.debug("Adding token %s to request.", self.token)
             try:
                 url, headers, data = self._client.add_token(
@@ -488,7 +496,9 @@ class OAuth2Session(aiohttp.ClientSession):
                             'Encoding client_id "%s" with client_secret as Basic auth credentials.',
                             client_id,
                         )
-                        auth = aiohttp.BasicAuth(login=client_id, password=client_secret)
+                        auth = aiohttp.BasicAuth(
+                            login=client_id, password=client_secret
+                        )
                     token = await self.refresh_token(
                         self.auto_refresh_url, auth=auth, **kwargs
                     )
@@ -508,9 +518,7 @@ class OAuth2Session(aiohttp.ClientSession):
         log.debug("Requesting url %s using method %s.", url, method)
         log.debug("Supplying headers %s and data %s", headers, data)
         log.debug("Passing through key word arguments %s.", kwargs)
-        return await super()._request(
-            method, url, headers=headers, data=data, **kwargs
-        )
+        return await super()._request(method, url, headers=headers, data=data, **kwargs)
 
     def register_compliance_hook(self, hook_type, hook):
         """Register a hook for request/response tweaking.
@@ -529,8 +537,8 @@ class OAuth2Session(aiohttp.ClientSession):
 
     def _invoke_hooks(self, hook_type, *hook_data):
         log.debug(
-            "Invoking %d %s hooks.", len(self.compliance_hook[hook_type]),
-            hook_type)
+            "Invoking %d %s hooks.", len(self.compliance_hook[hook_type]), hook_type
+        )
         for hook in self.compliance_hook[hook_type]:
             log.debug("Invoking hook %s.", hook)
             hook_data = hook(*hook_data)

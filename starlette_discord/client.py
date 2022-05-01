@@ -1,11 +1,11 @@
-from starlette.responses import RedirectResponse
 from oauthlib.common import generate_token
+from starlette.responses import RedirectResponse
+
+from .models import Connection, Guild, User
 from .oauth import OAuth2Session
-from .models import User, Guild, Connection
 
-
-DISCORD_URL = 'https://discord.com'
-API_URL = DISCORD_URL + '/api/v9'
+DISCORD_URL = "https://discord.com"
+API_URL = DISCORD_URL + "/api/v9"
 
 
 class DiscordOAuthSession(OAuth2Session):
@@ -35,16 +35,23 @@ class DiscordOAuthSession(OAuth2Session):
     token: Optional[Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class`float`]]]
         A previously generated, valid, access token to use instead of the OAuth code exchange
     """
+
     def __init__(self, client_id, client_secret, scope, redirect_uri, *, code, token):
         if (not (code or token)) or (code and token):
-            raise ValueError("Either 'code' or 'token' parameter must be provided, but not both.")
+            raise ValueError(
+                "Either 'code' or 'token' parameter must be provided, but not both."
+            )
         elif token:
             if not isinstance(token, dict):
-                raise TypeError("Parameter 'token' must be an instance of dict with at least the 'access_token' key.'")
-            if 'access_token' not in token:
+                raise TypeError(
+                    "Parameter 'token' must be an instance of dict with at least the 'access_token' key.'"
+                )
+            if "access_token" not in token:
                 raise ValueError("Parameter 'token' requires 'access_token' key.")
-            elif not token.get('token_type'):  # this is not required for the discord class but for the parent class
-                token['token_type'] = 'Bearer'
+            elif not token.get(
+                "token_type"
+            ):  # this is not required for the discord class but for the parent class
+                token["token_type"] = "Bearer"
 
         self._discord_auth_code = code
         self._discord_client_secret = client_secret
@@ -54,10 +61,7 @@ class DiscordOAuthSession(OAuth2Session):
         self._cached_connections = None
 
         super().__init__(
-            client_id=client_id,
-            scope=scope,
-            redirect_uri=redirect_uri,
-            token=token
+            client_id=client_id, scope=scope, redirect_uri=redirect_uri, token=token
         )
 
     @property
@@ -97,20 +101,18 @@ class DiscordOAuthSession(OAuth2Session):
         """
         return generate_token()
 
-    async def _discord_request(self, url_fragment, method='GET'):
+    async def _discord_request(self, url_fragment, method="GET"):
         if not self._discord_token:
-            url = API_URL + '/oauth2/token'
+            url = API_URL + "/oauth2/token"
             self._discord_token = await self.fetch_token(
                 url,
                 code=self._discord_auth_code,
-                client_secret=self._discord_client_secret
+                client_secret=self._discord_client_secret,
             )
 
-        token = self._discord_token['access_token']
+        token = self._discord_token["access_token"]
         url = API_URL + url_fragment
-        headers = {
-            'Authorization': 'Authorization: Bearer ' + token
-        }
+        headers = {"Authorization": "Authorization: Bearer " + token}
         async with self.request(method, url, headers=headers) as resp:
             resp.raise_for_status()
             return await resp.json()
@@ -123,7 +125,7 @@ class DiscordOAuthSession(OAuth2Session):
         :class:`User`
             The user who authorized the application.
         """
-        data_user = await self._discord_request('/users/@me')
+        data_user = await self._discord_request("/users/@me")
         user = User(data=data_user)
         self._cached_user = user
         return user
@@ -136,7 +138,7 @@ class DiscordOAuthSession(OAuth2Session):
         List[:class:`Guild`]
             The user's guild list.
         """
-        data_guilds = await self._discord_request('/users/@me/guilds')
+        data_guilds = await self._discord_request("/users/@me/guilds")
         guilds = [Guild(data=g) for g in data_guilds]
         self._cached_guilds = guilds
         return guilds
@@ -149,7 +151,7 @@ class DiscordOAuthSession(OAuth2Session):
         List[:class:`Connection`]
             The user's connections.
         """
-        data_connections = await self._discord_request('/users/@me/connections')
+        data_connections = await self._discord_request("/users/@me/connections")
         connections = [Connection(data=c) for c in data_connections]
         self._cached_connections = connections
         return connections
@@ -167,7 +169,9 @@ class DiscordOAuthSession(OAuth2Session):
         if not user_id:
             user = await self.identify()
             user_id = user.id
-        return await self._discord_request(f'/guilds/{guild_id}/members/{user_id}', method='PUT')
+        return await self._discord_request(
+            f"/guilds/{guild_id}/members/{user_id}", method="PUT"
+        )
 
     async def join_group_dm(self, dm_channel_id, user_id=None):
         """Add a user to a group DM.
@@ -182,7 +186,9 @@ class DiscordOAuthSession(OAuth2Session):
         if not user_id:
             user = await self.identify()
             user_id = user.id
-        return await self._discord_request(f'/channels/{dm_channel_id}/recipients/{user_id}', method='PUT')
+        return await self._discord_request(
+            f"/channels/{dm_channel_id}/recipients/{user_id}", method="PUT"
+        )
 
 
 class DiscordOAuthClient:
@@ -200,11 +206,11 @@ class DiscordOAuthClient:
         Discord authorization scopes.
     """
 
-    def __init__(self, client_id, client_secret, redirect_uri, scopes=('identify',)):
+    def __init__(self, client_id, client_secret, redirect_uri, scopes=("identify",)):
         self.client_id = str(client_id)
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
-        self.scope = ' '.join(scope for scope in scopes)
+        self.scope = " ".join(scope for scope in scopes)
 
     def redirect(self, state=None, prompt=None, redirect_uri=None):
         """Returns a RedirectResponse that directs to Discord login.
@@ -221,15 +227,18 @@ class DiscordOAuthClient:
         redirect_uri: Optional[:class:`str`]
             Optional redirect URI to pass to Discord. Defaults to the client's redirect URI.
         """
-        client_id = f'client_id={self.client_id}'
-        redirect_uri = f'redirect_uri={redirect_uri or self.redirect_uri}'
-        scopes = f'scope={self.scope}'
-        response_type = 'response_type=code'
-        url = DISCORD_URL + f'/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}'
+        client_id = f"client_id={self.client_id}"
+        redirect_uri = f"redirect_uri={redirect_uri or self.redirect_uri}"
+        scopes = f"scope={self.scope}"
+        response_type = "response_type=code"
+        url = (
+            DISCORD_URL
+            + f"/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}"
+        )
         if state:
-            url += f'&state={state}'
+            url += f"&state={state}"
         if prompt:
-            url += f'&prompt={prompt}'
+            url += f"&prompt={prompt}"
         return RedirectResponse(url)
 
     def session(self, code) -> DiscordOAuthSession:
@@ -278,12 +287,12 @@ class DiscordOAuthClient:
 
     async def login(self, code):
         """Shorthand for session setup + identify.
-        
+
         Parameters
         ----------
         code: :class:`str`
             The OAuth2 code provided by the authorization request.
-        
+
         Returns
         -------
         :class:`User`
@@ -296,7 +305,7 @@ class DiscordOAuthClient:
     # TODO: decide if I want to keep this. not a fan of the method name.
     async def login_return_token(self, code):
         """Shorthand for session setup + identify. Returns user and token.
-        
+
         Parameters
         ----------
         code: :class:`str`
