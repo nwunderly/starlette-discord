@@ -48,14 +48,12 @@ class DiscordOAuthSession(OAuth2Session):
                 )
             if "access_token" not in token:
                 raise ValueError("Parameter 'token' requires 'access_token' key.")
-            elif not token.get(
-                "token_type"
-            ):  # this is not required for the discord class but for the parent class
+            elif "token_type" not in token:  # this is not required for the discord class but for the parent class
                 token["token_type"] = "Bearer"
 
         self._discord_auth_code = code
         self._discord_client_secret = client_secret
-        self._discord_token = token
+        self.token = token
         self._cached_user = None
         self._cached_guilds = None
         self._cached_connections = None
@@ -102,17 +100,17 @@ class DiscordOAuthSession(OAuth2Session):
         return generate_token()
 
     async def _discord_request(self, url_fragment, method="GET"):
-        if not self._discord_token:
+        if not self.token:  # DEV NOTE: do we actually need to fetch the token here?
             url = API_URL + "/oauth2/token"
-            self._discord_token = await self.fetch_token(
+            self.token = t = await self.fetch_token(
                 url,
                 code=self._discord_auth_code,
                 client_secret=self._discord_client_secret,
             )
 
-        token = self._discord_token["access_token"]
+        access_token = self.token["access_token"]
         url = API_URL + url_fragment
-        headers = {"Authorization": "Authorization: Bearer " + token}
+        headers = {"Authorization": "Authorization: Bearer " + access_token}
         async with self.request(method, url, headers=headers) as resp:
             resp.raise_for_status()
             return await resp.json()
