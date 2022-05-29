@@ -102,7 +102,7 @@ class DiscordOAuthSession(OAuth2Session):
     async def _discord_request(self, url_fragment, method="GET"):
         if not self.token:  # DEV NOTE: do we actually need to fetch the token here?
             url = API_URL + "/oauth2/token"
-            self.token = t = await self.fetch_token(
+            self.token = await self.fetch_token(
                 url,
                 code=self._discord_auth_code,
                 client_secret=self._discord_client_secret,
