@@ -53,7 +53,6 @@ class DiscordOAuthSession(OAuth2Session):
 
         self._discord_auth_code = code
         self._discord_client_secret = client_secret
-        self.token = token
         self._cached_user = None
         self._cached_guilds = None
         self._cached_connections = None
