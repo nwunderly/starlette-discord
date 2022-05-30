@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from oauthlib.common import generate_token, urldecode
-from oauthlib.oauth2 import is_secure_transport, InsecureTransportError
+from oauthlib.oauth2 import InsecureTransportError, is_secure_transport
 from starlette.responses import RedirectResponse
 
 from .models import Connection, Guild, User
@@ -78,14 +78,10 @@ class DiscordOAuthSession(OAuth2Session):
         # stolen from oauth.py to allow the client to set this still.
         self._client.token = value
         self._client.populate_token_attributes(value)
-        
-        
+
     @property
     def session_expired(self):
-        return (
-            datetime.fromtimestamp(self.token["expires_at"])
-            < datetime.now()
-        )
+        return datetime.fromtimestamp(self.token["expires_at"]) < datetime.now()
 
     @property
     def cached_user(self):
@@ -111,7 +107,7 @@ class DiscordOAuthSession(OAuth2Session):
             The state string that was generated.
         """
         return generate_token()
-    
+
     async def ensure_token(
         self,
     ):  # very simple function so i don't have to paste it multiple times - minecrosters
@@ -205,7 +201,7 @@ class DiscordOAuthSession(OAuth2Session):
         return await self._discord_request(
             f"/channels/{dm_channel_id}/recipients/{user_id}", method="PUT"
         )
-    
+
     async def refresh_token(
         self,
         token_url,
