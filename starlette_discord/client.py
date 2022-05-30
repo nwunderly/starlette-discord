@@ -58,6 +58,7 @@ class DiscordOAuthSession(OAuth2Session):
 
         self._discord_auth_code = code
         self._discord_client_secret = client_secret
+        self._discord_client_id = client_id
         self._discord_token = token
         self._cached_user = None
         self._cached_guilds = None
@@ -264,26 +265,9 @@ class DiscordOAuthSession(OAuth2Session):
             self.token["refresh_token"] = refresh_token
         return self.token
 
-    async def revoke_token(self):
-        data = {
-            "client_id": self.client_id,
-            "client_secret": self._discord_client_secret,
-            "token": self._discord_token["access_token"],
-        }
-
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        async with self.post(
-            API_URL + "/oauth2/token/revoke",
-            headers=headers,
-            data=data,
-        ) as resp:
-            resp.raise_for_status()
-
-        await self.close()
-
     async def refresh(self):
         if self.session_expired:
-            refreshed_token = await self.refresh_token(API_URL + "/oauth2/token")
+            refreshed_token = await self.refresh_token(API_URL + "/oauth2/token", client_secret=self._discord_client_secret, client_id=self._discord_client_id)
             self.token = refreshed_token
             return refreshed_token
         return self.token
