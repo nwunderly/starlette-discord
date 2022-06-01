@@ -1,4 +1,11 @@
-from oauthlib.common import generate_token
+from datetime import datetime
+
+from oauthlib.common import generate_token, urldecode
+from oauthlib.oauth2 import (
+    InsecureTransportError,
+    WebApplicationClient,
+    is_secure_transport,
+)
 from starlette.responses import RedirectResponse
 
 from .models import Connection, Guild, User
@@ -37,6 +44,7 @@ class DiscordOAuthSession(OAuth2Session):
     """
 
     def __init__(self, client_id, client_secret, scope, redirect_uri, *, code, token):
+        client = WebApplicationClient(client_id, token=token)
         if (not (code or token)) or (code and token):
             raise ValueError(
                 "Either 'code' or 'token' parameter must be provided, but not both."
@@ -48,17 +56,25 @@ class DiscordOAuthSession(OAuth2Session):
                 )
             if "access_token" not in token:
                 raise ValueError("Parameter 'token' requires 'access_token' key.")
-            elif "token_type" not in token:  # this is not required for the discord class but for the parent class
+            elif (
+                "token_type" not in token
+            ):  # this is not required for the discord class but for the parent class
                 token["token_type"] = "Bearer"
 
-        self._discord_auth_code = code
+        elif code:
+            client.populate_code_attributes({"code": code})
+
         self._discord_client_secret = client_secret
         self._cached_user = None
         self._cached_guilds = None
         self._cached_connections = None
 
         super().__init__(
-            client_id=client_id, scope=scope, redirect_uri=redirect_uri, token=token
+            client_id=client_id,
+            scope=scope,
+            redirect_uri=redirect_uri,
+            token=token,
+            client=client,
         )
 
     @property
@@ -72,6 +88,10 @@ class DiscordOAuthSession(OAuth2Session):
         # stolen from oauth.py to allow the client to set this still.
         self._client.token = value
         self._client.populate_token_attributes(value)
+
+    @property
+    def session_expired(self):
+        return datetime.fromtimestamp(self.token["expires_at"]) < datetime.now()
 
     @property
     def cached_user(self):
@@ -98,14 +118,19 @@ class DiscordOAuthSession(OAuth2Session):
         """
         return generate_token()
 
-    async def _discord_request(self, url_fragment, method="GET"):
-        if not self.token:  # DEV NOTE: do we actually need to fetch the token here?
+    async def ensure_token(
+        self,
+    ):
+        if not self.token:
             url = API_URL + "/oauth2/token"
             self.token = await self.fetch_token(
                 url,
-                code=self._discord_auth_code,
+                code=self._client.code,
                 client_secret=self._discord_client_secret,
             )
+
+    async def _discord_request(self, url_fragment, method="GET"):
+        await self.ensure_token()
 
         access_token = self.token["access_token"]
         url = API_URL + url_fragment
@@ -186,6 +211,88 @@ class DiscordOAuthSession(OAuth2Session):
         return await self._discord_request(
             f"/channels/{dm_channel_id}/recipients/{user_id}", method="PUT"
         )
+
+    async def refresh_token(
+        self,
+        token_url,
+        refresh_token=None,
+        body="",
+        auth=None,
+        timeout=None,
+        headers=None,
+        verify_ssl=True,
+        proxies=None,
+        **kwargs,
+    ):
+        """Fetch a new access token using a refresh token.
+        :param token_url: The token endpoint, must be HTTPS.
+        :param refresh_token: The refresh_token to use.
+        :param body: Optional application/x-www-form-urlencoded body to add the
+                     include in the token request. Prefer kwargs over body.
+        :param auth: An auth tuple or method as accepted by `requests`.
+        :param timeout: Timeout of the request in seconds.
+        :param headers: A dict of headers to be used by `requests`.
+        :param verify: Verify SSL certificate.
+        :param proxies: The `proxies` argument will be passed to `requests`.
+        :param kwargs: Extra parameters to include in the token request.
+        :return: A token dict
+        """
+        if not token_url:
+            raise ValueError("No token endpoint set for auto_refresh.")
+
+        if not is_secure_transport(token_url):
+            raise InsecureTransportError()
+
+        refresh_token = refresh_token or self.token.get("refresh_token")
+
+        kwargs.update(self.auto_refresh_kwargs)
+        body = self._client.prepare_refresh_body(
+            body=body, refresh_token=refresh_token, **kwargs
+        )
+
+        if headers is None:
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            }
+
+        async with self.post(
+            token_url,
+            data=dict(urldecode(body)),
+            auth=auth,
+            timeout=timeout,
+            headers=headers,
+            verify_ssl=verify_ssl,
+            withhold_token=True,
+            # proxy=proxies,
+        ) as resp:
+            text = await resp.text()
+            (resp,) = self._invoke_hooks("refresh_token_response", resp)
+
+        self.token = self._client.parse_request_body_response(text, scope=self.scope)
+        if "refresh_token" not in self.token:
+            self.token["refresh_token"] = refresh_token
+        return self.token
+
+    async def refresh(self):
+        if self.session_expired:
+            refreshed_token = await self.refresh_token(
+                API_URL + "/oauth2/token",
+                client_secret=self._discord_client_secret,
+                client_id=self.client_id,
+            )
+            self.token = refreshed_token
+            return refreshed_token
+        return self.token
+
+    async def __aenter__(self):
+        await self.ensure_token()
+        await self.refresh()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
 
 
 class DiscordOAuthClient:
