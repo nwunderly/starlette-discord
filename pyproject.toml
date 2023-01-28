@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "starlette-discord"
+version = "0.2.1"
+description = "\"Login with Discord\" support for Starlette and FastAPI."
+authors = ["nwunderly"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "starlette_discord"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+discord-py = ">=1.7,<2"
+oauthlib = "^3.2.2"
+starlette = ">=0.13.6"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+isort = "^5.11.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
