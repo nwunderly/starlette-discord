@@ -3,6 +3,7 @@ import datetime
 import aiohttp
 from oauthlib.common import generate_token
 from oauthlib.oauth2 import WebApplicationClient
+from starlette.responses import RedirectResponse
 
 from .models import Connection, Guild, User
 
@@ -16,7 +17,7 @@ class DiscordTokenUpdated(Exception):
         self.token = token
 
 
-class DiscordOauth2Session(aiohttp.ClientSession):
+class DiscordOAuth2Session(aiohttp.ClientSession):
     def __init__(
         self, client_id, client_secret, scope, redirect_uri, *, code, token, **kwargs
     ):
@@ -42,12 +43,13 @@ class DiscordOauth2Session(aiohttp.ClientSession):
             elif code:
                 client.populate_code_attributes({"code": code})
 
-            self._cached_user = self._cached_guilds = self._cached_connections = None
-            self._discord_client_secret = client_secret
-            self.redirect_uri = redirect_uri
-            self.scope = scope
+        self._cached_user = self._cached_guilds = self._cached_connections = None
+        self._discord_client_secret = client_secret
+        self.code = code
+        self.redirect_uri = redirect_uri
+        self.scope = scope
 
-            super().__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def token(self):
@@ -84,7 +86,7 @@ class DiscordOauth2Session(aiohttp.ClientSession):
     async def ensure_token(self):
 
         if not self.token:
-            self.token = await self.fetch_token(self._client.code)
+            self.token = await self.fetch_token(self.code)
 
         if self.session_expired and self.token:
             await self.refresh_token()
@@ -181,11 +183,108 @@ class DiscordOauth2Session(aiohttp.ClientSession):
         await self.refresh_token()
         raise DeprecationWarning(".refresh() is deprecated, switch to refresh_token")
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "DiscordOAuth2Session":
         await self.ensure_token()
-        await self.refresh()  # TODO / NOTE: line replaced by .ensure_token
 
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
+
+
+class DiscordOAuth2Client:
+    def __init__(self, client_id, client_secret, redirect_uri, scopes=("identify",)):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+        self.scope = " ".join(scope for scope in scopes)
+
+    def redirect(self, state=None, prompt=None, redirect_uri=None):
+        """Returns a RedirectResponse that directs to Discord login.
+
+        Parameters
+        ----------
+        state: Optional[:class:`str`]
+            Optional state parameter for Discord redirect URL.
+            Docs can be found `here <https://discord.com/developers/docs/topics/oauth2#state-and-security>`_.
+        prompt: Optional[:class:`str`]
+            Optional prompt parameter for Discord redirect URL.
+            If ``consent``, user is prompted to re-approve authorization. If ``none``, skips authorization if user has already authorized.
+            Defaults to ``consent``.
+        redirect_uri: Optional[:class:`str`]
+            Optional redirect URI to pass to Discord. Defaults to the client's redirect URI.
+        """
+        client_id = f"client_id={self.client_id}"
+        redirect_uri = f"redirect_uri={redirect_uri or self.redirect_uri}"
+        scopes = f"scope={self.scope}"
+        response_type = "response_type=code"
+        url = (
+            DISCORD_URL
+            + f"/api/oauth2/authorize?{client_id}&{redirect_uri}&{scopes}&{response_type}"
+        )
+        if state:
+            url += f"&state={state}"
+        if prompt:
+            url += f"&prompt={prompt}"
+        return RedirectResponse(url)
+
+    def session(self, code) -> DiscordOAuth2Session:
+        """Create a new DiscordOAuthSession from an authorization code.
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the Discord API.
+
+        Returns
+        -------
+        :class:`DiscordOAuthSession`
+            A new OAuth session.
+        """
+        return DiscordOAuth2Session(
+            code=code,
+            token=None,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            scope=self.scope,
+            redirect_uri=self.redirect_uri,
+        )
+
+    def session_from_token(self, token) -> DiscordOAuth2Session:
+        """Create a new DiscordOAuthSession from an existing token.
+
+        Parameters
+        ----------
+        token: Dict[:class:`str`, Union[:class:`str`, :class:`int`, :class:`float`]]
+            An existing (valid) access token to use instead of the OAuth code exchange.
+
+        Returns
+        -------
+        :class:`DiscordOAuthSession`
+            A new OAuth session.
+        """
+        return DiscordOAuth2Session(
+            code=None,
+            token=token,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            scope=self.scope,
+            redirect_uri=self.redirect_uri,
+        )
+
+    async def login(self, code):
+        """Shorthand for session setup + identify.
+
+        Parameters
+        ----------
+        code: :class:`str`
+            The OAuth2 code provided by the authorization request.
+
+        Returns
+        -------
+        :class:`User`
+            The user who authorized the application.
+        """
+        async with self.session(code) as session:
+            user = await session.identify()
+        return user
