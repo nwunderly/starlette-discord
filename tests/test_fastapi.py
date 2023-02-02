@@ -2,10 +2,10 @@ import uvicorn
 from auth import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from fastapi import FastAPI
 
-from starlette_discord.client import DiscordOAuthClient
+from starlette_discord import DiscordOAuth2Client
 
 app = FastAPI()
-client = DiscordOAuthClient(
+client = DiscordOAuth2Client(
     CLIENT_ID,
     CLIENT_SECRET,
     REDIRECT_URI,

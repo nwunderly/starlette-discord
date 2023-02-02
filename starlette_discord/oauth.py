@@ -98,7 +98,7 @@ class DiscordOAuth2Session(aiohttp.ClientSession):
 
         access_token = self.token["access_token"]
         url = API_URL + url_fragment
-        headers = {"Authorization": "Authorization: Bearer " + access_token}
+        headers = {"Authorization": "Bearer " + access_token}
 
         async with self.request(method, url, headers=headers) as resp:
             resp.raise_for_status()
