@@ -13,5 +13,5 @@ __license__ = "MIT"
 __copyright__ = "Copyright 2021 nwunderly"
 __version__ = "0.2.1"
 
-from .client import DiscordOAuthClient, DiscordOAuthSession
 from .models import Connection, DiscordObject, Guild, User
+from .oauth import DiscordOAuth2Client, DiscordOAuth2Session
