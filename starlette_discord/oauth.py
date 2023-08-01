@@ -94,7 +94,7 @@ class DiscordOAuth2Session(aiohttp.ClientSession):
     async def _discord_request(
         self, url_fragment: str, method="GET"
     ):  # todo: maybe deprecate?
-        # await self.ensure_token()
+        # reasoning is this might be implemented in a way thats too specific to use
 
         access_token = self.token["access_token"]
         url = API_URL + url_fragment
