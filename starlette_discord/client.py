@@ -178,22 +178,33 @@ class DiscordOAuthSession(OAuth2Session):
         self._cached_connections = connections
         return connections
 
-    async def join_guild(self, guild_id, user_id=None):
+    async def join_guild(self, guild_id, bot_token, user_id=None):
         """Add a user to a guild.
 
         Parameters
         ----------
         guild_id: :class:`int`
             The ID of the guild to add the user to.
+        bot_token: :class:`str`
+            Your bot's token.
         user_id: Optional[:class:`int`]
             ID of the user, if known. If not specified, will first identify the user.
         """
         if not user_id:
             user = await self.identify()
             user_id = user.id
-        return await self._discord_request(
-            f"/guilds/{guild_id}/members/{user_id}", method="PUT"
-        )
+        headers = {"Authorization": f"Bot {bot_token}", "Content-Type": "application/json"}
+        async with self.request("PUT", 
+                                f"/guilds/{guild_id}/members/{user_id}", 
+                                headers=headers, 
+                                json={"access_token": self.access_token}
+                                ) as resp:
+            resp.raise_for_status()
+            return await resp.json()
+
+#        return await self._discord_request(
+#            f"/guilds/{guild_id}/members/{user_id}", method="PUT"
+#        )
 
     async def join_group_dm(self, dm_channel_id, user_id=None):
         """Add a user to a group DM.
