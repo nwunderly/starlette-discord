@@ -194,7 +194,11 @@ class DiscordOAuthSession(OAuth2Session):
         if not user_id:
             user = await self.identify()
             user_id = user.id
-        headers = {"Authorization": f"Bot {bot_token}", "Content-Type": "application/json"}
+
+        headers = {
+            "Authorization": f"Bot {bot_token}",
+            "Content-Type": "application/json"
+        }
 
         async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
             _url = API_URL + f"/guilds/{guild_id}/members/{user_id}"
@@ -202,7 +206,6 @@ class DiscordOAuthSession(OAuth2Session):
                 _url,
                 json={"access_token": self.access_token}
             )
-            await session.close()
 
         return await resp.json()
 
