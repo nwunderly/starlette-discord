@@ -197,12 +197,12 @@ class DiscordOAuthSession(OAuth2Session):
         headers = {"Authorization": f"Bot {bot_token}", "Content-Type": "application/json"}
         async with aiohttp.ClientSession(headers=headers) as session:
             _url = API_URL + f"/guilds/{guild_id}/members/{user_id}"
-            resp = await client.put(
+            resp = await session.put(
                 _url,
                 json={"access_token": self.access_token}
             )
             resp.raise_for_status()
-            return await resp.json()
+        return await resp.json()
 
     async def join_group_dm(self, dm_channel_id, user_id=None):
         """Add a user to a group DM.
