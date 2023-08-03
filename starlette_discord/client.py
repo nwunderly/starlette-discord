@@ -1,4 +1,5 @@
 from datetime import datetime
+import aiohttp
 
 from oauthlib.common import generate_token, urldecode
 from oauthlib.oauth2 import (
@@ -194,17 +195,14 @@ class DiscordOAuthSession(OAuth2Session):
             user = await self.identify()
             user_id = user.id
         headers = {"Authorization": f"Bot {bot_token}", "Content-Type": "application/json"}
-        async with self.request("PUT", 
-                                f"/guilds/{guild_id}/members/{user_id}", 
-                                headers=headers, 
-                                json={"access_token": self.access_token}
-                                ) as resp:
+        async with aiohttp.ClientSession(headers=headers) as session:
+            _url = API_URL + f"/guilds/{guild_id}/members/{user_id}"
+            resp = await client.put(
+                _url,
+                json={"access_token": self.access_token}
+            )
             resp.raise_for_status()
             return await resp.json()
-
-#        return await self._discord_request(
-#            f"/guilds/{guild_id}/members/{user_id}", method="PUT"
-#        )
 
     async def join_group_dm(self, dm_channel_id, user_id=None):
         """Add a user to a group DM.
