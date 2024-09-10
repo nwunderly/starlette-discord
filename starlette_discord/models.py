@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-import discord
-
 
 class DiscordObject:
     """Represents a Discord object. This library's equivalent to discord.Object.
@@ -158,6 +156,8 @@ class User(DiscordObject):
         :class:`discord.User`
             The discord.py User object, if it could be found.
         """
+        import discord
+        
         user = client.get_user(self.id)
         if not user:
             try:
@@ -248,6 +248,8 @@ class Guild(DiscordObject):
         :class:`discord.Guild`
             The discord.py Guild object, if the guild could be found.
         """
+        import discord
+
         guild = client.get_guild(self.id)
         if not guild:
             try:
